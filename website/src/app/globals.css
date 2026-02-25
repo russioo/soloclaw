@@ -351,6 +351,7 @@ a { color: inherit; text-decoration: none; }
 
 .s4-panel:first-child { border-left: none; }
 
+
 .s4-panel-val {
   font-size: clamp(60px, 10vw, 120px);
   font-weight: 700;
@@ -525,15 +526,115 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ====== RESPONSIVE ====== */
+/* 2560px = reference, under = zoomet ud */
 
-@media (max-width: 700px) {
-  .spread { padding: 32px 20px; }
-  .s1-content { padding: 32px 20px; }
-  .s1-stats { flex-direction: column; gap: 20px; }
-  .s1-headline { letter-spacing: -2px; }
+/* Global zoom – hele siden skaleres ned under 2560px */
+@media (max-width: 1920px) {
+  html { zoom: 0.88; }
+}
+@media (max-width: 1440px) {
+  html { zoom: 0.82; }
+}
+@media (max-width: 1024px) {
+  html { zoom: 0.78; }
+}
+@media (max-width: 768px) {
+  html { zoom: 0.75; }
+}
+@media (max-width: 480px) {
+  html { zoom: 0.72; }
+}
+
+/* Tablet og mindre laptops – mindre padding/fonts */
+@media (max-width: 1024px) {
+  .spread { padding: 32px 24px; }
+  .s1-content { padding: 32px 24px; max-width: 100%; }
+  .s1-stats { gap: 24px; }
+  .s1-headline { font-size: clamp(28px, 5vw, 52px); }
+  .s1-sub { font-size: 13px; }
+  .s1-stat-val { font-size: 22px; }
+  .s1-stat-label { font-size: 9px; }
   .hiw-steps { grid-template-columns: 1fr; }
   .hiw-step { border-right: none !important; }
   .hiw-step:last-child { border-bottom: none; }
-  .s4-panel { padding: 48px 32px; }
-  .s6-links { gap: 20px; }
+  .hiw-heading { margin-bottom: 40px; font-size: clamp(16px, 2.2vw, 26px); }
+  .hiw-step { padding: 32px 24px; }
+  .hiw-step-title { font-size: 16px; }
+  .hiw-step-text { font-size: 11px; }
+  .s4-panel { width: 50vw; min-width: 280px; padding: 32px 24px; }
+  .s4-panel-val { font-size: clamp(48px, 8vw, 96px); }
+  .s5-list { max-width: 100%; }
+}
+
+/* Mobile – tydeligt zoomet ud */
+@media (max-width: 768px) {
+  .spread { padding: 24px 20px; min-height: auto; }
+  .s1 { min-height: 100vh; min-height: 100dvh; }
+  .s1-content { padding: 24px 20px; }
+  .s1-mark { font-size: 9px; margin-bottom: 20px; }
+  .s1-stats { flex-direction: column; gap: 18px; align-items: flex-start; }
+  .s1-headline { font-size: clamp(24px, 7vw, 36px); letter-spacing: -2px; }
+  .s1-sub { font-size: 12px; margin-bottom: 24px; }
+  .s1-stat-val { font-size: 20px; }
+  .s1-stat-label { font-size: 9px; }
+  .s1-btn { padding: 10px 20px; font-size: 10px; }
+  .s1::after { height: 100px; }
+  .hiw { padding: 24px 20px; }
+  .hiw-heading { font-size: clamp(14px, 3.2vw, 20px); margin-bottom: 32px; }
+  .hiw-step { padding: 22px 20px; }
+  .hiw-step-title { font-size: 14px; }
+  .hiw-step-text { font-size: 10px; }
+  .marquee { padding: 12px 0; }
+  .marquee-track { gap: 24px; }
+  .marquee-item { font-size: 10px; }
+  .s3 { padding-top: 40px; padding-bottom: 40px; }
+  .s3-quote { font-size: clamp(15px, 3.8vw, 20px); }
+  .s3-meta { font-size: 9px; margin-top: 20px; }
+  .s4-wrap { overflow: visible; }
+  .s4 { flex-direction: column; width: 100%; }
+  .s4-panel { width: 100%; min-width: unset; border-left: none; border-bottom: 1px solid var(--line); padding: 28px 20px; height: auto; min-height: 55vh; min-height: 55dvh; }
+  .s4-panel:last-child { border-bottom: none; }
+  .s4-panel-val { font-size: clamp(36px, 12vw, 56px); }
+  .s4-panel-tag { font-size: 9px; margin-top: 12px; }
+  .s4-panel-sub { font-size: 11px; margin-top: 6px; }
+  .s5 { padding-top: 40px; padding-bottom: 40px; }
+  .s5-head { margin-bottom: 20px; font-size: 8px; }
+  .s5-row { grid-template-columns: 38px 1fr; gap: 12px; padding: 12px 0; font-size: 12px; }
+  .s5-row:hover { transform: translateX(6px); }
+  .s5-time { font-size: 10px; }
+  .s5-action { font-size: 12px; }
+  .s5-detail { font-size: 10px; }
+  .s6 { padding: 36px 20px; }
+  .s6-statement { font-size: clamp(20px, 5.5vw, 32px); margin-bottom: 24px; letter-spacing: -1px; }
+  .s6-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .s6-link { font-size: 10px; }
+}
+
+/* Small mobile – maksimalt zoomet ud */
+@media (max-width: 480px) {
+  .spread { padding: 20px 16px; }
+  .s1-content { padding: 20px 16px; }
+  .s1-mark { font-size: 8px; margin-bottom: 16px; }
+  .s1-headline { font-size: clamp(20px, 8vw, 28px); letter-spacing: -1px; line-height: 1.05; }
+  .s1-sub { font-size: 11px; margin-bottom: 20px; }
+  .s1-stats { gap: 14px; }
+  .s1-stat-val { font-size: 18px; }
+  .hiw { padding: 20px 16px; }
+  .hiw-heading { font-size: clamp(13px, 4vw, 18px); margin-bottom: 24px; }
+  .hiw-step { padding: 18px 16px; }
+  .hiw-step-title { font-size: 13px; }
+  .marquee-track { gap: 18px; }
+  .marquee-item { font-size: 9px; }
+  .s3 { padding-top: 32px; padding-bottom: 32px; }
+  .s3-quote { font-size: clamp(13px, 4vw, 17px); }
+  .s4-panel { padding: 24px 16px; min-height: 50vh; min-height: 50dvh; }
+  .s4-panel-val { font-size: clamp(30px, 14vw, 44px); }
+  .s5 { padding-top: 32px; padding-bottom: 32px; }
+  .s5-row { grid-template-columns: 34px 1fr; gap: 10px; padding: 10px 0; font-size: 11px; }
+  .s5-action { font-size: 11px; }
+  .s5-detail { font-size: 9px; }
+  .s6 { padding: 28px 16px; }
+  .s6-statement { font-size: clamp(16px, 6vw, 24px); margin-bottom: 20px; }
+  .s6-links { gap: 14px; }
+  .s6-link { font-size: 9px; }
 }

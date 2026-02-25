@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 
@@ -10,16 +10,33 @@ const panels = [
   { val: "3.6", tag: "SOL in LP", sub: "Added to the Pump.fun liquidity pool", accent: false },
 ];
 
+const MOBILE_BREAKPOINT = 768;
+
 export default function Spread4() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+    const check = () => setIsMobile(mq.matches);
+    check();
+    mq.addEventListener("change", check);
+    return () => mq.removeEventListener("change", check);
+  }, []);
 
   useGSAP(() => {
     const wrap = wrapRef.current;
     const track = trackRef.current;
     if (!wrap || !track) return;
 
-    const totalScroll = track.scrollWidth - window.innerWidth;
+    if (isMobile) {
+      gsap.set(track, { x: 0 });
+      return;
+    }
+
+    const totalScroll = Math.max(0, track.scrollWidth - window.innerWidth);
+    if (totalScroll <= 0) return;
 
     gsap.to(track, {
       x: -totalScroll,
@@ -33,7 +50,7 @@ export default function Spread4() {
         invalidateOnRefresh: true,
       },
     });
-  }, { scope: wrapRef });
+  }, { scope: wrapRef, dependencies: [isMobile] });
 
   return (
     <div className="s4-wrap" ref={wrapRef}>
