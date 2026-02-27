@@ -33,16 +33,24 @@ async function handleRun(_req, res) {
     }
 }
 const server = (0, http_1.createServer)((req, res) => {
-    if (req.url === "/run" || req.url === "/api/run") {
+    const path = req.url?.split("?")[0] ?? "";
+    if (path === "/health" || path === "/ping") {
+        res.writeHead(200);
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ ok: true, uptime: process.uptime() }));
+        return;
+    }
+    if (path === "/run" || path === "/api/run") {
         handleRun(req, res);
+        return;
     }
-    else {
-        res.writeHead(404);
-        res.end(JSON.stringify({ error: "Ikke fundet – brug /run eller /api/run" }));
-    }
+    res.writeHead(404);
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ error: "Ikke fundet – brug /run, /api/run eller /health" }));
 });
 server.listen(PORT, () => {
-    console.log(`Agent server på http://localhost:${PORT}`);
-    console.log(`Endpoints: GET/POST http://localhost:${PORT}/run`);
-    console.log(`Kør ngrok: npx ngrok http ${PORT}`);
+    console.log(`[Agent] Server på http://localhost:${PORT}`);
+    console.log(`[Agent] /health = status  /run = kør cyklus`);
+    console.log(`[Agent] Kør i anden terminal: npx ngrok http ${PORT}`);
+    console.log(`[Agent] Sæt ngrok URL i Vercel: AGENT_BACKEND_URL`);
 });

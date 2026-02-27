@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         burnedTokens: result.burnedTokens,
         lpSol: result.lpSol,
         treasurySol,
-        thought: `Claimed ${result.claimed?.toFixed(4)} SOL`,
+        thought: `Claimed ${result.claimed?.toFixed(2)} SOL`,
       });
     }
 

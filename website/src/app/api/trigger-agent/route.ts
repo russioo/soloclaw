@@ -29,7 +29,7 @@ export async function GET() {
 
   const lastRun = row?.last_run_at ? new Date(row.last_run_at).getTime() : 0;
   if (Date.now() - lastRun < MIN_INTERVAL_MS) {
-    return NextResponse.json({ triggered: false, reason: "Ran less than 2 min ago" });
+    return NextResponse.json({ triggered: false, reason: "Ran less than 2 min ago" }, { status: 200 });
   }
 
   await admin.from("agent_stats").upsert(
@@ -42,21 +42,40 @@ export async function GET() {
     if (agentBackendUrl) {
       const base = agentBackendUrl.replace(/\/$/, "");
       const url = base.endsWith("/run") || base.endsWith("/api/run") ? base : `${base}/run`;
-      const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(55_000) });
-      const text = await res.text();
+      let res: Response;
+      let text: string;
+      try {
+        res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(55_000) });
+        text = await res.text();
+      } catch (fetchErr) {
+        const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        return NextResponse.json({
+          triggered: false,
+          reason: msg.includes("timeout") ? "Backend timeout (60s)" : `Backend unreachable: ${msg.slice(0, 80)}`,
+        }, { status: 200 });
+      }
+
       if (!res.ok) {
         if (res.status === 404 || res.status === 502 || text.includes("ngrok") || text.includes("ERR_NGROK")) {
           return NextResponse.json({
             triggered: false,
-            reason: "Agent backend offline – start ngrok og opdater AGENT_BACKEND_URL i Vercel",
-          });
+            reason: "Agent backend offline – start ngrok og sæt AGENT_BACKEND_URL i Vercel",
+          }, { status: 200 });
         }
         if (res.status === 503 && text.includes("Cycle already running")) {
           return NextResponse.json({ triggered: false, reason: "Cycle already running" }, { status: 200 });
         }
-        throw new Error(`Backend ${res.status}: ${text.slice(0, 200)}`);
+        if (res.status === 500) {
+          return NextResponse.json({ triggered: false, reason: `Backend error: ${text.slice(0, 150)}` }, { status: 200 });
+        }
+        return NextResponse.json({ triggered: false, reason: `Backend ${res.status}: ${text.slice(0, 150)}` }, { status: 200 });
       }
-      result = JSON.parse(text) as Awaited<ReturnType<typeof runAgentCycle>>;
+
+      try {
+        result = JSON.parse(text) as Awaited<ReturnType<typeof runAgentCycle>>;
+      } catch {
+        return NextResponse.json({ triggered: false, reason: "Invalid JSON from backend" }, { status: 200 });
+      }
     } else {
       result = await runAgentCycle();
     }
@@ -86,16 +105,14 @@ export async function GET() {
         burnedTokens: result.burnedTokens,
         lpSol: result.lpSol,
         treasurySol,
-        thought: `Claimed ${result.claimed?.toFixed(4)} SOL`,
+        thought: `Claimed ${result.claimed?.toFixed(2)} SOL`,
       });
     }
 
-    return NextResponse.json({ triggered: true, ...result });
+    return NextResponse.json({ triggered: true, ...result }, { status: 200 });
   } catch (err) {
     console.error("[trigger-agent]", err);
-    return NextResponse.json(
-      { triggered: true, error: err instanceof Error ? err.message : "Error" },
-      { status: 500 }
-    );
+    const msg = err instanceof Error ? err.message : "Error";
+    return NextResponse.json({ triggered: false, reason: msg }, { status: 200 });
   }
 }

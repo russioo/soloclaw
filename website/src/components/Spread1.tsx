@@ -4,7 +4,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import CloudBg from "./CloudBg";
 import { useAgentData } from "@/hooks/useAgentData";
-import { formatCompact } from "@/lib/format-stats";
+import { formatCompact, formatSol } from "@/lib/format-stats";
 
 export default function Spread1() {
   const ref = useRef<HTMLElement>(null);
@@ -56,7 +56,7 @@ export default function Spread1() {
 
         <div className="s1-stats">
           <div className="s1-stat">
-            <div className="s1-stat-val">{stats.treasurySol}</div>
+            <div className="s1-stat-val">{formatSol(stats.treasurySol)}</div>
             <div className="s1-stat-label">SOL Treasury</div>
           </div>
           <div className="s1-stat">
