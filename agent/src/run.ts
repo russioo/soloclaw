@@ -127,6 +127,9 @@ async function doBuyback(
 ): Promise<number> {
   const agentTokenAta = getAssociatedTokenAddressSync(config.mint, agent.publicKey, true);
   const balanceBefore = await getTokenBalance(connection, agentTokenAta);
+  if (balanceBefore > BigInt(0)) {
+    console.log(`  [Sikkerhed] balanceBefore=${balanceBefore} (bevares – brænder IKKE disse)`);
+  }
 
   const solBn = new BN(Math.floor(solAmount * LAMPORTS_PER_SOL));
 
@@ -172,10 +175,14 @@ async function doBuyback(
   const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
 
   if (boughtAmount > BigInt(0)) {
+    console.log(`  [Burn] balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} → brænder kun boughtAmount=${boughtAmount}`);
     const burnIx = createBurnInstruction(agentTokenAta, config.mint, agent.publicKey, boughtAmount, [], TOKEN_PROGRAM_ID);
     await sendAndConfirm(connection, new Transaction().add(burnIx), agent);
     console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
     return Number(boughtAmount);
+  }
+  if (balanceBefore > BigInt(0) && balanceAfter === balanceBefore) {
+    console.log(`  [Sikkerhed] Ingen nye tokens købt – brænder intet. Eksisterende ${balanceBefore} bevaret.`);
   }
   return 0;
 }

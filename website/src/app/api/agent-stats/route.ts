@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      thought: db?.thought ?? "Loading...",
+      thought: db?.thought ?? "Waiting for fees.",
       thoughtMeta: db?.thought_meta ?? "— SoloClaw",
       feedEntries: db?.feed_entries ?? [],
       stats: {

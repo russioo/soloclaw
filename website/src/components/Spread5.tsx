@@ -39,15 +39,19 @@ export default function Spread5() {
         Live activity
       </div>
       <div className="s5-list">
-        {feedEntries.map((e, i) => (
-          <div className="s5-row" key={i}>
-            <span className="s5-time">{e.time}</span>
-            <div>
-              <div className="s5-action">{e.action}</div>
-              <div className="s5-detail">{e.detail}</div>
+        {feedEntries.length > 0 ? (
+          feedEntries.map((e, i) => (
+            <div className="s5-row" key={i}>
+              <span className="s5-time">{e.time}</span>
+              <div>
+                <div className="s5-action">{e.action}</div>
+                <div className="s5-detail">{e.detail}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div className="s5-empty">No activity yet. Agent runs when there are fees to claim.</div>
+        )}
       </div>
     </section>
   );

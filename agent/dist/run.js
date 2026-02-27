@@ -132,6 +132,9 @@ async function runCycle() {
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true);
     const balanceBefore = await getTokenBalance(connection, agentTokenAta);
+    if (balanceBefore > BigInt(0)) {
+        console.log(`  [Sikkerhed] balanceBefore=${balanceBefore} (bevares – brænder IKKE disse)`);
+    }
     const solBn = new bn_js_1.default(Math.floor(solAmount * LAMPORTS_PER_SOL));
     if (isMigrated) {
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
@@ -171,10 +174,14 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     const balanceAfter = await getTokenBalance(connection, agentTokenAta);
     const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
     if (boughtAmount > BigInt(0)) {
+        console.log(`  [Burn] balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} → brænder kun boughtAmount=${boughtAmount}`);
         const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, boughtAmount, [], spl_token_1.TOKEN_PROGRAM_ID);
         await sendAndConfirm(connection, new web3_js_1.Transaction().add(burnIx), agent);
         console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
         return Number(boughtAmount);
+    }
+    if (balanceBefore > BigInt(0) && balanceAfter === balanceBefore) {
+        console.log(`  [Sikkerhed] Ingen nye tokens købt – brænder intet. Eksisterende ${balanceBefore} bevaret.`);
     }
     return 0;
 }

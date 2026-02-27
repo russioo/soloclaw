@@ -30,7 +30,7 @@ export async function saveAgentCycle(result: {
     total_claimed: (prev.total_claimed ?? 0) + (result.claimed ?? 0),
     total_creator_share: (prev.total_creator_share ?? 0) + (result.creatorShare ?? 0),
     total_burned: (prev.total_burned ?? 0) + (result.burnedTokens ?? 0),
-    total_bought_back: (prev.total_bought_back ?? 0) + (result.boughtBackSol ?? 0),
+    total_bought_back: (prev.total_bought_back ?? 0) + (result.burnedTokens ?? 0),
     total_lp_sol: (prev.total_lp_sol ?? 0) + (result.lpSol ?? 0),
     treasury_sol: result.treasurySol ?? prev.treasury_sol ?? 0,
     thought: result.thought ?? prev.thought ?? "Waiting for next cycle",

@@ -3,6 +3,8 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, SplitText } from "@/lib/gsap";
 
+const PUMP_URL = process.env.NEXT_PUBLIC_MINT_ADDRESS ? `https://pump.fun/co/${process.env.NEXT_PUBLIC_MINT_ADDRESS}` : "https://pump.fun";
+
 export default function Spread6() {
   const ref = useRef<HTMLElement>(null);
 
@@ -33,7 +35,7 @@ export default function Spread6() {
       <div className="s6-statement">No team. No keys. Just code.</div>
       <div className="s6-links">
         <a className="s6-link" href="https://x.com/soloclawdotfun" target="_blank" rel="noopener noreferrer">X</a>
-        <a className="s6-link" href="https://pump.fun" target="_blank" rel="noopener noreferrer">Pump.fun</a>
+        <a className="s6-link" href={PUMP_URL} target="_blank" rel="noopener noreferrer">Pump.fun</a>
         <a className="s6-link" href="/docs">Docs</a>
       </div>
     </section>

@@ -11,7 +11,7 @@ const MIN_INTERVAL_MS =
     ? (parseInt(process.env.AGENT_DEV_INTERVAL_SEC ?? "10", 10) * 1000)
     : 2 * 60 * 1000; // 2 min prod
 
-/** Kører agenten når nogen besøger sitet – max 1x per 3 min. Ingen cron nødvendig. */
+/** Kører agenten når nogen besøger sitet – max 1x per 2 min. Ingen cron nødvendig. */
 export async function GET() {
   const agentBackendUrl = process.env.AGENT_BACKEND_URL?.trim();
   const useLocalAgent = !agentBackendUrl && process.env.AGENT_PRIVATE_KEY && process.env.CREATOR_WALLET;
@@ -29,10 +29,13 @@ export async function GET() {
 
   const lastRun = row?.last_run_at ? new Date(row.last_run_at).getTime() : 0;
   if (Date.now() - lastRun < MIN_INTERVAL_MS) {
-    return NextResponse.json({ triggered: false, reason: "Ran less than 3 min ago" });
+    return NextResponse.json({ triggered: false, reason: "Ran less than 2 min ago" });
   }
 
-  await admin.from("agent_stats").update({ last_run_at: new Date().toISOString() }).eq("id", "default");
+  await admin.from("agent_stats").upsert(
+    { id: "default", last_run_at: new Date().toISOString() },
+    { onConflict: "id" }
+  );
 
   try {
     let result: Awaited<ReturnType<typeof runAgentCycle>>;

@@ -14,7 +14,7 @@ export default function Spread4() {
   const { stats } = useAgentData();
 
   const panels = [
-    { val: String(stats.totalClaimed), tag: "To treasury", sub: "20% of claimed fees to treasury", accent: false },
+    { val: String(stats.totalClaimed), tag: "Total claimed", sub: "Fees collected from trades", accent: false },
     { val: formatCompact(stats.totalBurned), tag: "Tokens burned", sub: "Permanently removed from circulating supply", accent: true },
     { val: formatCompact(stats.totalBoughtBack), tag: "Bought back", sub: "Tokens repurchased using treasury funds", accent: false },
     { val: String(stats.totalLpSol), tag: "SOL in LP", sub: "Added to the Pump.fun liquidity pool", accent: false },
