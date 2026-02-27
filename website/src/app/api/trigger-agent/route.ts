@@ -45,11 +45,14 @@ export async function GET() {
       const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(55_000) });
       const text = await res.text();
       if (!res.ok) {
-        if (res.status === 404 || text.includes("ngrok") || text.includes("ERR_NGROK")) {
+        if (res.status === 404 || res.status === 502 || text.includes("ngrok") || text.includes("ERR_NGROK")) {
           return NextResponse.json({
             triggered: false,
             reason: "Agent backend offline – start ngrok og opdater AGENT_BACKEND_URL i Vercel",
           });
+        }
+        if (res.status === 503 && text.includes("Cycle already running")) {
+          return NextResponse.json({ triggered: false, reason: "Cycle already running" }, { status: 200 });
         }
         throw new Error(`Backend ${res.status}: ${text.slice(0, 200)}`);
       }
