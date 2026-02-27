@@ -64,8 +64,8 @@ export default function Spread1() {
             <div className="s1-stat-label">Burned</div>
           </div>
           <div className="s1-stat">
-            <div className="s1-stat-val">{formatCompact(stats.totalBoughtBack)}</div>
-            <div className="s1-stat-label">Bought back</div>
+            <div className="s1-stat-val">{formatSol(stats.totalBoughtBack)}</div>
+            <div className="s1-stat-label">SOL bought back</div>
           </div>
         </div>
 

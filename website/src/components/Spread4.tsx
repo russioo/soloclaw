@@ -16,7 +16,7 @@ export default function Spread4() {
   const panels = [
     { val: formatSol(stats.totalClaimed), tag: "Total claimed", sub: "Fees collected from trades", accent: false },
     { val: formatCompact(stats.totalBurned), tag: "Tokens burned", sub: "Permanently removed from circulating supply", accent: true },
-    { val: formatCompact(stats.totalBoughtBack), tag: "Bought back", sub: "Tokens repurchased using treasury funds", accent: false },
+    { val: formatSol(stats.totalBoughtBack), tag: "SOL bought back", sub: "SOL spent on buybacks", accent: false },
     { val: formatSol(stats.totalLpSol), tag: "SOL in LP", sub: "Added to the Pump.fun liquidity pool", accent: false },
   ];
 

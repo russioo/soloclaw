@@ -18,4 +18,5 @@ create table if not exists agent_stats (
 -- RLS: læsning for alle (anon), skrivning via service_role (bypasser RLS)
 alter table agent_stats enable row level security;
 
+drop policy if exists "Allow public read" on agent_stats;
 create policy "Allow public read" on agent_stats for select using (true);

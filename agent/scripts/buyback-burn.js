@@ -2,12 +2,10 @@
 /**
  * Buyback + burn – kør manuelt. Gemmer til Supabase. Hjemmesiden læser derfra.
  * Brug: cd agent && npm run buyback
- * Eller: fortæl Cursor "lav en buyback og burn"
  */
 
 const path = require("path");
 
-// Load .env fra agent/
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 require("dotenv").config({ path: path.join(__dirname, "..", ".env.local"), override: true });
 
@@ -19,6 +17,7 @@ async function main() {
   console.log("Resultat:", result);
 
   if (result.ok) {
+    const isSkipped = "skipped" in result && result.skipped;
     await saveAgentCycle({
       claimed: "claimed" in result ? result.claimed : undefined,
       creatorShare: "creatorShare" in result ? result.creatorShare : undefined,
@@ -26,9 +25,10 @@ async function main() {
       burnedTokens: "burnedTokens" in result ? result.burnedTokens : undefined,
       lpSol: "lpSol" in result ? result.lpSol : undefined,
       treasurySol: result.treasurySol,
-      thought: result.skipped
-        ? "Waiting for enough fees"
-        : `Claimed ${result.claimed?.toFixed(2) ?? "0"} SOL`,
+      skipped: isSkipped,
+      thought: isSkipped
+        ? "Scanning for fees…"
+        : `Claimed ${("claimed" in result ? result.claimed : 0)?.toFixed(2) ?? "0"} SOL — bought back & burned`,
     });
   }
 }

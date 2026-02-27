@@ -19,8 +19,7 @@ function loadKeypair(secret: string): Keypair {
   }
 }
 
-const DEFAULT_RPC =
-  "https://chaotic-divine-scion.solana-mainnet.quiknode.pro/d1288954635c3b57dac38bb5b7c529128a4a3efe/";
+const DEFAULT_RPC = "https://api.mainnet-beta.solana.com";
 
 function parseRpcUrl(raw: string | undefined): string {
   const url = (raw ?? DEFAULT_RPC).trim();
@@ -39,6 +38,6 @@ export const config = {
   creatorWallet: new PublicKey(process.env.CREATOR_WALLET ?? "11111111111111111111111111111111"),
   mint: new PublicKey(process.env.MINT_ADDRESS ?? "11111111111111111111111111111111"),
   minClaimSol: parseFloat(process.env.MIN_CLAIM_SOL ?? "0.01"),
-  cycleIntervalMs: parseInt(process.env.CYCLE_INTERVAL_MS ?? "180000", 10),
-  rpcDelayMs: parseInt(process.env.RPC_DELAY_MS ?? "1200", 10),
+  cycleIntervalMs: parseInt(process.env.CYCLE_INTERVAL_MS ?? "60000", 10),
+  rpcDelayMs: parseInt(process.env.RPC_DELAY_MS ?? "200", 10),
 };
