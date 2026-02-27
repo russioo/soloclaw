@@ -3,9 +3,12 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import CloudBg from "./CloudBg";
+import { useAgentData } from "@/hooks/useAgentData";
+import { formatCompact } from "@/lib/format-stats";
 
 export default function Spread1() {
   const ref = useRef<HTMLElement>(null);
+  const { stats } = useAgentData();
 
   useGSAP(() => {
     const el = ref.current;
@@ -28,30 +31,6 @@ export default function Spread1() {
       .from(el.querySelector(".s1-cta"), {
         opacity: 0, y: 15, duration: 0.6,
       }, "-=0.3");
-
-    // Scramble the treasury number
-    const valEl = el.querySelector(".s1-stat-val") as HTMLElement;
-    if (valEl) {
-      const chars = "0123456789.";
-      const target = "12.4";
-      let frame = 0;
-      const totalFrames = 30;
-      const iv = setInterval(() => {
-        frame++;
-        let r = "";
-        for (let i = 0; i < target.length; i++) {
-          r += frame > totalFrames * ((i + 1) / target.length)
-            ? target[i]
-            : chars[Math.floor(Math.random() * chars.length)];
-        }
-        valEl.textContent = r;
-        if (frame >= totalFrames * 1.3) {
-          clearInterval(iv);
-          valEl.textContent = target;
-        }
-      }, 50);
-      return () => clearInterval(iv);
-    }
   }, { scope: ref });
 
   return (
@@ -77,15 +56,15 @@ export default function Spread1() {
 
         <div className="s1-stats">
           <div className="s1-stat">
-            <div className="s1-stat-val">12.4</div>
+            <div className="s1-stat-val">{stats.treasurySol}</div>
             <div className="s1-stat-label">SOL Treasury</div>
           </div>
           <div className="s1-stat">
-            <div className="s1-stat-val">420K</div>
+            <div className="s1-stat-val">{formatCompact(stats.totalBurned)}</div>
             <div className="s1-stat-label">Burned</div>
           </div>
           <div className="s1-stat">
-            <div className="s1-stat-val">1.2M</div>
+            <div className="s1-stat-val">{formatCompact(stats.totalBoughtBack)}</div>
             <div className="s1-stat-label">Bought back</div>
           </div>
         </div>

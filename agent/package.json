@@ -1,0 +1,22 @@
+{
+  "name": "soloclaw-agent",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "run": "node dist/run.js",
+    "schedule": "node dist/schedule.js",
+    "dev": "npm run build && npm run schedule"
+  },
+  "dependencies": {
+    "@pump-fun/pump-sdk": "^1.28.0",
+    "@pump-fun/pump-swap-sdk": "^1.14.0",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.2",
+    "bn.js": "^5.2.2",
+    "bs58": "^6.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0"
+  }
+}

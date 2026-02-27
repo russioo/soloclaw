@@ -1,14 +1,9 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap, ScrollTrigger } from "@/lib/gsap";
-
-const panels = [
-  { val: "8.2", tag: "Fees claimed", sub: "Total SOL claimed from creator fees since launch", accent: false },
-  { val: "420K", tag: "Tokens burned", sub: "Permanently removed from circulating supply", accent: true },
-  { val: "1.2M", tag: "Bought back", sub: "Tokens repurchased using treasury funds", accent: false },
-  { val: "3.6", tag: "SOL in LP", sub: "Added to the Pump.fun liquidity pool", accent: false },
-];
+import { gsap } from "@/lib/gsap";
+import { useAgentData } from "@/hooks/useAgentData";
+import { formatCompact } from "@/lib/format-stats";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -16,6 +11,14 @@ export default function Spread4() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(true);
+  const { stats } = useAgentData();
+
+  const panels = [
+    { val: String(stats.totalClaimed), tag: "To treasury", sub: "20% af claimed fees til treasury", accent: false },
+    { val: formatCompact(stats.totalBurned), tag: "Tokens burned", sub: "Permanently removed from circulating supply", accent: true },
+    { val: formatCompact(stats.totalBoughtBack), tag: "Bought back", sub: "Tokens repurchased using treasury funds", accent: false },
+    { val: String(stats.totalLpSol), tag: "SOL in LP", sub: "Added to the Pump.fun liquidity pool", accent: false },
+  ];
 
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);

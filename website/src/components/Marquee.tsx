@@ -1,18 +1,11 @@
 "use client";
 
-const items = [
-  "Claimed 0.34 SOL",
-  "Burned 85,000 tokens",
-  "Bought back 42K",
-  "Added 0.8 SOL to LP",
-  "Claimed 0.19 SOL",
-  "Burned 28,000 tokens",
-  "Pool depth +6.2%",
-  "Supply reduced to 998.2M",
-];
+import { useAgentData } from "@/hooks/useAgentData";
 
 export default function Marquee() {
-  const repeated = [...items, ...items, ...items, ...items];
+  const { feedEntries } = useAgentData();
+  const items = feedEntries.map((e) => e.action);
+  const repeated = items.length > 0 ? [...items, ...items, ...items, ...items] : ["Live activity starts soon"];
 
   return (
     <div className="marquee">
