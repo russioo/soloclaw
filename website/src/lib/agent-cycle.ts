@@ -44,7 +44,7 @@ export async function runAgentCycle() {
   const minClaim = parseFloat(process.env.MIN_CLAIM_SOL ?? "0.01");
 
   if (balanceSol < minClaim) {
-    return { ok: true, skipped: true, reason: "For lidt at claim", treasurySol: balanceSol };
+    return { ok: true, skipped: true, reason: "Not enough to claim", treasurySol: balanceSol };
   }
 
   const toCreator = balanceSol * 0.8;

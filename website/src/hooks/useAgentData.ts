@@ -17,13 +17,13 @@ export function useAgentData(): AgentState {
         const res = await fetch("/api/agent-stats");
         if (!res.ok) {
           const err = await res.json().catch(async () => ({ error: await res.text() }));
-          throw new Error(err.error || "Fejl");
+          throw new Error(err.error || "Error");
         }
         const data = await res.json();
         setState(data);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Kunne ikke hente data");
+        setError(err instanceof Error ? err.message : "Could not fetch data");
       }
     };
 
@@ -33,7 +33,7 @@ export function useAgentData(): AgentState {
   }, []);
 
   const empty: AgentState = {
-    thought: error ? `Fejl: ${error}` : "Henter data...",
+    thought: error ? `Error: ${error}` : "Loading...",
     thoughtMeta: "— SoloClaw",
     feedEntries: [],
     stats: {

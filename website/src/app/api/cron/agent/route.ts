@@ -13,7 +13,7 @@ export async function GET(request: Request) {
 
   if (!process.env.AGENT_PRIVATE_KEY || !process.env.CREATOR_WALLET) {
     return NextResponse.json(
-      { error: "AGENT_PRIVATE_KEY og CREATOR_WALLET skal sættes i Vercel" },
+      { error: "AGENT_PRIVATE_KEY and CREATOR_WALLET must be set in Vercel" },
       { status: 500 }
     );
   }
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     if (result.skipped) {
       await saveAgentCycle({
         treasurySol: result.treasurySol ?? treasurySol,
-        thought: "Venter på nok fees",
+        thought: "Waiting for enough fees",
       });
     } else if (result.ok && "claimed" in result) {
       await saveAgentCycle({
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   } catch (err) {
     console.error("[cron/agent]", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Agent fejl" },
+      { error: err instanceof Error ? err.message : "Agent error" },
       { status: 500 }
     );
   }

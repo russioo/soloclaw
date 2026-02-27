@@ -15,7 +15,7 @@ function actionToFeedEntry(action: CycleAction, cycleIndex: number): AgentFeedEn
       return {
         time,
         action: `+${action.toTreasury.toFixed(2)} SOL to treasury`,
-        detail: "20% fra claim",
+        detail: "20% from claim",
       };
     case "buyback":
       return {
@@ -27,13 +27,13 @@ function actionToFeedEntry(action: CycleAction, cycleIndex: number): AgentFeedEn
       return {
         time,
         action: `Burned ${action.tokens.toLocaleString()} tokens`,
-        detail: "Supply reduceret",
+        detail: "Supply reduced",
       };
     case "addLP":
       return {
         time,
         action: `Added ${action.sol.toFixed(2)} SOL to LP`,
-        detail: "Pool depth styrket",
+        detail: "Pool depth strengthened",
       };
     default:
       return null;
@@ -48,7 +48,7 @@ export function getFakeAgentState(cyclesCompleted: number): AgentState {
   let totalLpSol = 0;
 
   const feedEntries: AgentFeedEntry[] = [];
-  let latestThought = "Venter på første cyklus...";
+  let latestThought = "Waiting for first cycle...";
 
   for (let i = 0; i < cyclesCompleted; i++) {
     const isMigrated = i >= MIGRATED_AFTER_CYCLE;
@@ -90,7 +90,7 @@ export function getFakeAgentState(cyclesCompleted: number): AgentState {
 
   const thoughtMeta =
     cyclesCompleted > 0
-      ? `— SoloClaw, cyklus ${cyclesCompleted}`
+      ? `— SoloClaw, cycle ${cyclesCompleted}`
       : "— SoloClaw";
 
   return {

@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      thought: db?.thought ?? "Henter data...",
+      thought: db?.thought ?? "Loading...",
       thoughtMeta: db?.thought_meta ?? "— SoloClaw",
       feedEntries: db?.feed_entries ?? [],
       stats: {
@@ -36,7 +36,7 @@ export async function GET() {
   } catch (err) {
     console.error("[agent-stats]", err);
     return NextResponse.json(
-      { error: "Kunne ikke hente data" },
+      { error: "Could not fetch data" },
       { status: 500 }
     );
   }

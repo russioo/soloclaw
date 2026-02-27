@@ -14,19 +14,19 @@ export async function GET() {
   const useLocalAgent = !agentBackendUrl && process.env.AGENT_PRIVATE_KEY && process.env.CREATOR_WALLET;
 
   if (!agentBackendUrl && !useLocalAgent) {
-    return NextResponse.json({ triggered: false, reason: "Config mangler (AGENT_BACKEND_URL eller AGENT_PRIVATE_KEY)" }, { status: 200 });
+    return NextResponse.json({ triggered: false, reason: "Missing config (AGENT_BACKEND_URL or AGENT_PRIVATE_KEY)" }, { status: 200 });
   }
 
   const admin = supabaseAdmin;
   if (!admin) {
-    return NextResponse.json({ triggered: false, reason: "Supabase mangler" }, { status: 200 });
+    return NextResponse.json({ triggered: false, reason: "Supabase missing" }, { status: 200 });
   }
 
   const { data: row } = await admin.from("agent_stats").select("last_run_at").eq("id", "default").single();
 
   const lastRun = row?.last_run_at ? new Date(row.last_run_at).getTime() : 0;
   if (Date.now() - lastRun < MIN_INTERVAL_MS) {
-    return NextResponse.json({ triggered: false, reason: "Kørte for under 3 min siden" });
+    return NextResponse.json({ triggered: false, reason: "Ran less than 3 min ago" });
   }
 
   await admin.from("agent_stats").update({ last_run_at: new Date().toISOString() }).eq("id", "default");
@@ -58,7 +58,7 @@ export async function GET() {
     if (result.skipped) {
       await saveAgentCycle({
         treasurySol: result.treasurySol ?? treasurySol,
-        thought: "Venter på nok fees",
+        thought: "Waiting for enough fees",
       });
     } else if (result.ok && "claimed" in result) {
       await saveAgentCycle({
@@ -76,7 +76,7 @@ export async function GET() {
   } catch (err) {
     console.error("[trigger-agent]", err);
     return NextResponse.json(
-      { triggered: true, error: err instanceof Error ? err.message : "Fejl" },
+      { triggered: true, error: err instanceof Error ? err.message : "Error" },
       { status: 500 }
     );
   }

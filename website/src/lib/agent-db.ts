@@ -33,7 +33,7 @@ export async function saveAgentCycle(result: {
     total_bought_back: (prev.total_bought_back ?? 0) + (result.boughtBackSol ?? 0),
     total_lp_sol: (prev.total_lp_sol ?? 0) + (result.lpSol ?? 0),
     treasury_sol: result.treasurySol ?? prev.treasury_sol ?? 0,
-    thought: result.thought ?? prev.thought ?? "Venter på næste cyklus",
+    thought: result.thought ?? prev.thought ?? "Waiting for next cycle",
     thought_meta: prev.thought_meta ?? "— SoloClaw",
     feed_entries: prev.feed_entries ?? [],
     updated_at: new Date().toISOString(),
