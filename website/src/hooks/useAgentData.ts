@@ -16,7 +16,7 @@ export function useAgentData(): AgentState {
       try {
         const res = await fetch("/api/agent-stats");
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: await res.text() }));
+          const err = await res.json().catch(async () => ({ error: await res.text() }));
           throw new Error(err.error || "Fejl");
         }
         const data = await res.json();
