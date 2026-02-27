@@ -4,7 +4,7 @@
  */
 
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { getAssociatedTokenAddressSync, NATIVE_MINT, createTransferInstruction, createAssociatedTokenAccountIdempotentInstruction, TOKEN_PROGRAM_ID, createBurnInstruction, getAccount } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, NATIVE_MINT, createTransferInstruction, createAssociatedTokenAccountIdempotentInstruction, TOKEN_2022_PROGRAM_ID, createBurnInstruction, getAccount } from "@solana/spl-token";
 import BN from "bn.js";
 import { OnlinePumpSdk, getBuyTokenAmountFromSolAmount, PUMP_SDK } from "@pump-fun/pump-sdk";
 import * as PumpSwap from "@pump-fun/pump-swap-sdk";
@@ -125,7 +125,7 @@ async function doBuyback(
   solAmount: number,
   isMigrated: boolean
 ): Promise<number> {
-  const agentTokenAta = getAssociatedTokenAddressSync(config.mint, agent.publicKey, true);
+  const agentTokenAta = getAssociatedTokenAddressSync(config.mint, agent.publicKey, true, TOKEN_2022_PROGRAM_ID);
   const balanceBefore = await getTokenBalance(connection, agentTokenAta);
   if (balanceBefore > BigInt(0)) {
     console.log(`  [Sikkerhed] balanceBefore=${balanceBefore} (bevares – brænder IKKE disse)`);
@@ -164,7 +164,7 @@ async function doBuyback(
       solAmount: solBn,
       amount,
       slippage: 2,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
     });
     const tx = new Transaction().add(...buyIx);
     await sendAndConfirm(connection, tx, agent);
@@ -176,7 +176,7 @@ async function doBuyback(
 
   if (boughtAmount > BigInt(0)) {
     console.log(`  [Burn] balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} → brænder kun boughtAmount=${boughtAmount}`);
-    const burnIx = createBurnInstruction(agentTokenAta, config.mint, agent.publicKey, boughtAmount, [], TOKEN_PROGRAM_ID);
+    const burnIx = createBurnInstruction(agentTokenAta, config.mint, agent.publicKey, boughtAmount, [], TOKEN_2022_PROGRAM_ID);
     await sendAndConfirm(connection, new Transaction().add(burnIx), agent);
     console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
     return Number(boughtAmount);
@@ -189,7 +189,7 @@ async function doBuyback(
 
 async function getTokenBalance(connection: Connection, ata: PublicKey): Promise<bigint> {
   try {
-    const acc = await getAccount(connection, ata);
+    const acc = await getAccount(connection, ata, "confirmed", TOKEN_2022_PROGRAM_ID);
     return acc.amount;
   } catch {
     return BigInt(0);

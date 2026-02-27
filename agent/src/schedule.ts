@@ -1,6 +1,7 @@
 /**
  * Kører agenten hver 3 min (eller CYCLE_INTERVAL_MS).
  */
+import "dotenv/config";
 import { config } from "./config.js";
 import { runCycle } from "./run.js";
 

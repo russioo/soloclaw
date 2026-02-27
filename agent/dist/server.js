@@ -16,6 +16,7 @@ async function handleRun(_req, res) {
         res.end(JSON.stringify(result));
     }
     catch (err) {
+        console.error("[Server] /run fejl:", err);
         const msg = err instanceof Error ? err.message : "Fejl";
         res.writeHead(500);
         res.end(JSON.stringify({ ok: false, error: msg }));

@@ -23,8 +23,9 @@ Kopier disse ind i Vercel → dit projekt → Settings → Environment Variables
 
 | Name | Value | Beskrivelse |
 |------|-------|-------------|
-| `RPC_URL` | `https://api.mainnet-beta.solana.com` | Eller Helius/QuickNode |
+| `RPC_URL` | `https://api.mainnet-beta.solana.com` | **Anbefaling:** Brug Helius/QuickNode – gratis RPC giver ofte 429 |
 | `NEXT_PUBLIC_RPC_URL` | samme som RPC_URL | |
+| `AGENT_BACKEND_URL` | `https://din-ngrok.ngrok-free.app` | Kun hvis agent kører lokalt – ngrok skal køre, opdater hver gang ngrok restartes |
 | `CRON_SECRET` | `et_tilfældigt_password` | Sikrer cron-endpoint (Vercel kan sætte automatisk) |
 | `MIN_CLAIM_SOL` | `0.01` | Min SOL før agent claimer |
 

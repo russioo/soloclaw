@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Kører agenten hver 3 min (eller CYCLE_INTERVAL_MS).
  */
+require("dotenv/config");
 const config_js_1 = require("./config.js");
 const run_js_1 = require("./run.js");
 async function main() {

@@ -68,9 +68,13 @@ Push til GitHub → Vercel deployer automatisk.
    npx ngrok http 3456
    ```
 4. Kopiér ngrok-URL'en (fx `https://abc123.ngrok-free.app`) og sæt den som `AGENT_BACKEND_URL` i Vercel.
-5. Sørg for at Supabase env-vars er sat på Vercel – Vercel modtager resultatet fra din PC og skriver til Supabase.
+5. **VIGTIGT:** Gratis ngrok-URL'er ændres hver gang ngrok genstartes. Opdater `AGENT_BACKEND_URL` i Vercel efter hver restart.
+6. Sørg for at Supabase env-vars er sat på Vercel – Vercel modtager resultatet fra din PC og skriver til Supabase.
 
 **Flow:** Besøg → Vercel kalder din PC via ngrok → PC kører agent med private key → returnerer resultat → Vercel gemmer i Supabase.
+
+### 429 Too Many Requests?
+Gratis Solana RPC har lav rate limit. Brug fx [Helius](https://helius.dev) (gratis tier) eller QuickNode, og sæt `RPC_URL` + `NEXT_PUBLIC_RPC_URL` i Vercel.
 
 ---
 

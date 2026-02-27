@@ -43,8 +43,17 @@ export async function GET() {
       const base = agentBackendUrl.replace(/\/$/, "");
       const url = base.endsWith("/run") || base.endsWith("/api/run") ? base : `${base}/run`;
       const res = await fetch(url, { method: "GET", signal: AbortSignal.timeout(55_000) });
-      if (!res.ok) throw new Error(`Backend ${res.status}: ${await res.text()}`);
-      result = (await res.json()) as Awaited<ReturnType<typeof runAgentCycle>>;
+      const text = await res.text();
+      if (!res.ok) {
+        if (res.status === 404 || text.includes("ngrok") || text.includes("ERR_NGROK")) {
+          return NextResponse.json({
+            triggered: false,
+            reason: "Agent backend offline – start ngrok og opdater AGENT_BACKEND_URL i Vercel",
+          });
+        }
+        throw new Error(`Backend ${res.status}: ${text.slice(0, 200)}`);
+      }
+      result = JSON.parse(text) as Awaited<ReturnType<typeof runAgentCycle>>;
     } else {
       result = await runAgentCycle();
     }

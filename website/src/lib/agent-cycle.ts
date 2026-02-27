@@ -9,7 +9,7 @@ import {
   NATIVE_MINT,
   createTransferInstruction,
   createAssociatedTokenAccountIdempotentInstruction,
-  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
   createBurnInstruction,
   getAccount,
 } from "@solana/spl-token";
@@ -123,7 +123,7 @@ async function doBuyback(
   solAmount: number,
   isMigrated: boolean
 ): Promise<number> {
-  const agentTokenAta = getAssociatedTokenAddressSync(mint, agent.publicKey, true);
+  const agentTokenAta = getAssociatedTokenAddressSync(mint, agent.publicKey, true, TOKEN_2022_PROGRAM_ID);
   const balanceBefore = await getTokenBalance(connection, agentTokenAta);
 
   const solBn = new BN(Math.floor(solAmount * LAMPORTS_PER_SOL));
@@ -158,7 +158,7 @@ async function doBuyback(
       solAmount: solBn,
       amount,
       slippage: 2,
-      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenProgram: TOKEN_2022_PROGRAM_ID,
     });
     const tx = new Transaction().add(...buyIx);
     await sendAndConfirm(connection, tx, agent);
@@ -174,7 +174,7 @@ async function doBuyback(
       agent.publicKey,
       boughtAmount,
       [],
-      TOKEN_PROGRAM_ID
+      TOKEN_2022_PROGRAM_ID
     );
     await sendAndConfirm(connection, new Transaction().add(burnIx), agent);
     return Number(boughtAmount);
@@ -184,7 +184,7 @@ async function doBuyback(
 
 async function getTokenBalance(connection: Connection, ata: PublicKey): Promise<bigint> {
   try {
-    const acc = await getAccount(connection, ata);
+    const acc = await getAccount(connection, ata, "confirmed", TOKEN_2022_PROGRAM_ID);
     return acc.amount;
   } catch {
     return BigInt(0);

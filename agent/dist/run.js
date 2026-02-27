@@ -130,7 +130,7 @@ async function runCycle() {
     };
 }
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
-    const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true);
+    const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true, spl_token_1.TOKEN_2022_PROGRAM_ID);
     const balanceBefore = await getTokenBalance(connection, agentTokenAta);
     if (balanceBefore > BigInt(0)) {
         console.log(`  [Sikkerhed] balanceBefore=${balanceBefore} (bevares – brænder IKKE disse)`);
@@ -165,7 +165,7 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
             solAmount: solBn,
             amount,
             slippage: 2,
-            tokenProgram: spl_token_1.TOKEN_PROGRAM_ID,
+            tokenProgram: spl_token_1.TOKEN_2022_PROGRAM_ID,
         });
         const tx = new web3_js_1.Transaction().add(...buyIx);
         await sendAndConfirm(connection, tx, agent);
@@ -175,7 +175,7 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
     if (boughtAmount > BigInt(0)) {
         console.log(`  [Burn] balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} → brænder kun boughtAmount=${boughtAmount}`);
-        const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, boughtAmount, [], spl_token_1.TOKEN_PROGRAM_ID);
+        const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, boughtAmount, [], spl_token_1.TOKEN_2022_PROGRAM_ID);
         await sendAndConfirm(connection, new web3_js_1.Transaction().add(burnIx), agent);
         console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
         return Number(boughtAmount);
@@ -187,7 +187,7 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
 }
 async function getTokenBalance(connection, ata) {
     try {
-        const acc = await (0, spl_token_1.getAccount)(connection, ata);
+        const acc = await (0, spl_token_1.getAccount)(connection, ata, "confirmed", spl_token_1.TOKEN_2022_PROGRAM_ID);
         return acc.amount;
     }
     catch {

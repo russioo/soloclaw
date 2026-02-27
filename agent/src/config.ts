@@ -14,8 +14,16 @@ function loadKeypair(secret: string): Keypair {
   }
 }
 
+function parseRpcUrl(raw: string | undefined): string {
+  const url = (raw ?? "https://api.mainnet-beta.solana.com").trim();
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    throw new Error(`RPC_URL skal starte med http:// eller https://. Fik: "${url.slice(0, 50)}..."`);
+  }
+  return url;
+}
+
 export const config = {
-  rpcUrl: process.env.RPC_URL ?? "https://api.mainnet-beta.solana.com",
+  rpcUrl: parseRpcUrl(process.env.RPC_URL),
   agentKeypair: loadKeypair(process.env.AGENT_PRIVATE_KEY ?? ""),
   creatorWallet: new PublicKey(process.env.CREATOR_WALLET ?? "11111111111111111111111111111111"),
   mint: new PublicKey(process.env.MINT_ADDRESS ?? "11111111111111111111111111111111"),

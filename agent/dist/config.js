@@ -19,8 +19,15 @@ function loadKeypair(secret) {
         return web3_js_1.Keypair.fromSecretKey(new Uint8Array(arr));
     }
 }
+function parseRpcUrl(raw) {
+    const url = (raw ?? "https://api.mainnet-beta.solana.com").trim();
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        throw new Error(`RPC_URL skal starte med http:// eller https://. Fik: "${url.slice(0, 50)}..."`);
+    }
+    return url;
+}
 exports.config = {
-    rpcUrl: process.env.RPC_URL ?? "https://api.mainnet-beta.solana.com",
+    rpcUrl: parseRpcUrl(process.env.RPC_URL),
     agentKeypair: loadKeypair(process.env.AGENT_PRIVATE_KEY ?? ""),
     creatorWallet: new web3_js_1.PublicKey(process.env.CREATOR_WALLET ?? "11111111111111111111111111111111"),
     mint: new web3_js_1.PublicKey(process.env.MINT_ADDRESS ?? "11111111111111111111111111111111"),
