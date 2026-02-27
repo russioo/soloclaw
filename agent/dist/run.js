@@ -48,11 +48,21 @@ const pump_sdk_1 = require("@pump-fun/pump-sdk");
 const PumpSwap = __importStar(require("@pump-fun/pump-swap-sdk"));
 const config_js_1 = require("./config.js");
 const LAMPORTS_PER_SOL = 1e9;
+function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+}
+async function rpcDelay() {
+    await sleep(config_js_1.config.rpcDelayMs);
+}
 async function runCycle() {
-    const connection = new web3_js_1.Connection(config_js_1.config.rpcUrl, "confirmed");
+    const connection = new web3_js_1.Connection(config_js_1.config.rpcUrl, {
+        commitment: "confirmed",
+        confirmTransactionInitialTimeout: 90_000,
+    });
     const agent = config_js_1.config.agentKeypair;
     const sdk = new pump_sdk_1.OnlinePumpSdk(connection);
     console.log(`[${new Date().toISOString()}] Starter cyklus...`);
+    await rpcDelay();
     let balanceSol = 0;
     try {
         const balanceLamports = await sdk.getCreatorVaultBalanceBothPrograms(agent.publicKey);
@@ -75,6 +85,7 @@ async function runCycle() {
     const toTreasury = balanceSol * 0.2;
     const toCreatorLamports = Math.floor(toCreator * LAMPORTS_PER_SOL);
     const toTreasuryLamports = Math.floor(toTreasury * LAMPORTS_PER_SOL);
+    await rpcDelay();
     let isMigrated = false;
     try {
         const feeResult = await sdk.getMinimumDistributableFee(config_js_1.config.mint);
@@ -89,6 +100,7 @@ async function runCycle() {
     const creatorAta = (0, spl_token_1.getAssociatedTokenAddressSync)(spl_token_1.NATIVE_MINT, config_js_1.config.creatorWallet, true);
     tx.add((0, spl_token_1.createAssociatedTokenAccountIdempotentInstruction)(agent.publicKey, creatorAta, config_js_1.config.creatorWallet, spl_token_1.NATIVE_MINT));
     tx.add((0, spl_token_1.createTransferInstruction)(agentAta, creatorAta, agent.publicKey, toCreatorLamports));
+    await rpcDelay();
     const sig = await sendAndConfirm(connection, tx, agent);
     console.log(`  Claimed ${balanceSol.toFixed(4)} SOL. Sent ${toCreator.toFixed(4)} til creator. Tx: ${sig}`);
     if (toTreasury < 0.005) {
@@ -111,10 +123,12 @@ async function runCycle() {
     let burnedTokens = 0;
     let lpSol = 0;
     if (buybackFraction > 0) {
+        await rpcDelay();
         burnedTokens = await doBuyback(connection, sdk, agent, buybackAmount, isMigrated);
         boughtBackSol = buybackAmount;
     }
     if (lpFraction > 0 && isMigrated) {
+        await rpcDelay();
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
         await doAddLp(connection, onlineAmm, agent, lpAmount);
         lpSol = lpAmount;
@@ -130,6 +144,7 @@ async function runCycle() {
     };
 }
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
+    await rpcDelay();
     const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true, spl_token_1.TOKEN_2022_PROGRAM_ID);
     const balanceBefore = await getTokenBalance(connection, agentTokenAta);
     if (balanceBefore > BigInt(0)) {
@@ -137,16 +152,20 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     }
     const solBn = new bn_js_1.default(Math.floor(solAmount * LAMPORTS_PER_SOL));
     if (isMigrated) {
+        await rpcDelay();
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
         const poolKey = PumpSwap.canonicalPumpPoolPda(config_js_1.config.mint);
         const swapState = await onlineAmm.swapSolanaState(poolKey, agent.publicKey);
         const buyIx = await PumpSwap.PUMP_AMM_SDK.buyQuoteInput(swapState, solBn, 2);
         const tx = new web3_js_1.Transaction().add(...buyIx);
+        await rpcDelay();
         await sendAndConfirm(connection, tx, agent);
         console.log(`  Buyback (AMM): ${solAmount.toFixed(4)} SOL`);
     }
     else {
+        await rpcDelay();
         const global = await sdk.fetchGlobal();
+        await rpcDelay();
         const { bondingCurveAccountInfo, bondingCurve, associatedUserAccountInfo } = await sdk.fetchBuyState(config_js_1.config.mint, agent.publicKey);
         const amount = (0, pump_sdk_1.getBuyTokenAmountFromSolAmount)({
             global,
@@ -168,14 +187,17 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
             tokenProgram: spl_token_1.TOKEN_2022_PROGRAM_ID,
         });
         const tx = new web3_js_1.Transaction().add(...buyIx);
+        await rpcDelay();
         await sendAndConfirm(connection, tx, agent);
         console.log(`  Buyback (bonding): ${solAmount.toFixed(4)} SOL → ~${amount.toString()} tokens`);
     }
+    await rpcDelay();
     const balanceAfter = await getTokenBalance(connection, agentTokenAta);
     const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
     if (boughtAmount > BigInt(0)) {
         console.log(`  [Burn] balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} → brænder kun boughtAmount=${boughtAmount}`);
         const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, boughtAmount, [], spl_token_1.TOKEN_2022_PROGRAM_ID);
+        await rpcDelay();
         await sendAndConfirm(connection, new web3_js_1.Transaction().add(burnIx), agent);
         console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
         return Number(boughtAmount);
@@ -187,6 +209,7 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
 }
 async function getTokenBalance(connection, ata) {
     try {
+        await rpcDelay();
         const acc = await (0, spl_token_1.getAccount)(connection, ata, "confirmed", spl_token_1.TOKEN_2022_PROGRAM_ID);
         return acc.amount;
     }
@@ -195,6 +218,7 @@ async function getTokenBalance(connection, ata) {
     }
 }
 async function doAddLp(connection, onlineAmm, agent, solAmount) {
+    await rpcDelay();
     const poolKey = PumpSwap.canonicalPumpPoolPda(config_js_1.config.mint);
     const liquidityState = await onlineAmm.liquiditySolanaState(poolKey, agent.publicKey);
     const quoteAmount = new bn_js_1.default(Math.floor(solAmount * LAMPORTS_PER_SOL));
@@ -203,15 +227,19 @@ async function doAddLp(connection, onlineAmm, agent, solAmount) {
     const { base, lpToken } = await pumpAmmSdk.depositAutocompleteBaseAndLpTokenFromQuote(liquidityState, quoteAmount, slippage);
     const depositIx = await pumpAmmSdk.depositInstructions(liquidityState, lpToken, slippage);
     const tx = new web3_js_1.Transaction().add(...depositIx);
+    await rpcDelay();
     const sig = await sendAndConfirm(connection, tx, agent);
     console.log(`  Add LP: ${solAmount.toFixed(4)} SOL. Tx: ${sig}`);
 }
 async function sendAndConfirm(connection, tx, signer) {
     tx.feePayer = signer.publicKey;
+    await rpcDelay();
     const { blockhash } = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
     tx.sign(signer);
+    await rpcDelay();
     const sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+    await rpcDelay();
     await connection.confirmTransaction(sig);
     return sig;
 }

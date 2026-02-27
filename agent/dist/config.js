@@ -33,4 +33,5 @@ exports.config = {
     mint: new web3_js_1.PublicKey(process.env.MINT_ADDRESS ?? "11111111111111111111111111111111"),
     minClaimSol: parseFloat(process.env.MIN_CLAIM_SOL ?? "0.01"),
     cycleIntervalMs: parseInt(process.env.CYCLE_INTERVAL_MS ?? "180000", 10),
+    rpcDelayMs: parseInt(process.env.RPC_DELAY_MS ?? "1200", 10),
 };

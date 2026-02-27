@@ -8,8 +8,15 @@ require("dotenv/config");
 const http_1 = require("http");
 const run_js_1 = require("./run.js");
 const PORT = parseInt(process.env.AGENT_PORT ?? "3456", 10);
+let cycleRunning = false;
 async function handleRun(_req, res) {
     res.setHeader("Content-Type", "application/json");
+    if (cycleRunning) {
+        res.writeHead(503);
+        res.end(JSON.stringify({ ok: false, error: "Cycle already running" }));
+        return;
+    }
+    cycleRunning = true;
     try {
         const result = await (0, run_js_1.runCycle)();
         res.writeHead(200);
@@ -20,6 +27,9 @@ async function handleRun(_req, res) {
         const msg = err instanceof Error ? err.message : "Fejl";
         res.writeHead(500);
         res.end(JSON.stringify({ ok: false, error: msg }));
+    }
+    finally {
+        cycleRunning = false;
     }
 }
 const server = (0, http_1.createServer)((req, res) => {

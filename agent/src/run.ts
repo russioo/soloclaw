@@ -12,17 +12,29 @@ import { config } from "./config.js";
 
 const LAMPORTS_PER_SOL = 1e9;
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function rpcDelay(): Promise<void> {
+  await sleep(config.rpcDelayMs);
+}
+
 export type CycleResult =
   | { ok: true; skipped: true; reason: string; treasurySol?: number }
   | { ok: true; claimed: number; creatorShare: number; boughtBackSol: number; burnedTokens: number; lpSol: number; treasurySol?: number }
   | { ok: false; error: string };
 
 export async function runCycle(): Promise<CycleResult> {
-  const connection = new Connection(config.rpcUrl, "confirmed");
+  const connection = new Connection(config.rpcUrl, {
+    commitment: "confirmed",
+    confirmTransactionInitialTimeout: 90_000,
+  });
   const agent = config.agentKeypair;
   const sdk = new OnlinePumpSdk(connection);
 
   console.log(`[${new Date().toISOString()}] Starter cyklus...`);
+  await rpcDelay();
 
   let balanceSol = 0;
   try {
@@ -47,6 +59,7 @@ export async function runCycle(): Promise<CycleResult> {
   const toCreatorLamports = Math.floor(toCreator * LAMPORTS_PER_SOL);
   const toTreasuryLamports = Math.floor(toTreasury * LAMPORTS_PER_SOL);
 
+  await rpcDelay();
   let isMigrated = false;
   try {
     const feeResult = await sdk.getMinimumDistributableFee(config.mint);
@@ -71,6 +84,7 @@ export async function runCycle(): Promise<CycleResult> {
     )
   );
 
+  await rpcDelay();
   const sig = await sendAndConfirm(connection, tx, agent);
   console.log(`  Claimed ${balanceSol.toFixed(4)} SOL. Sent ${toCreator.toFixed(4)} til creator. Tx: ${sig}`);
 
@@ -97,11 +111,13 @@ export async function runCycle(): Promise<CycleResult> {
   let lpSol = 0;
 
   if (buybackFraction > 0) {
+    await rpcDelay();
     burnedTokens = await doBuyback(connection, sdk, agent, buybackAmount, isMigrated);
     boughtBackSol = buybackAmount;
   }
 
   if (lpFraction > 0 && isMigrated) {
+    await rpcDelay();
     const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
     await doAddLp(connection, onlineAmm, agent, lpAmount);
     lpSol = lpAmount;
@@ -125,6 +141,7 @@ async function doBuyback(
   solAmount: number,
   isMigrated: boolean
 ): Promise<number> {
+  await rpcDelay();
   const agentTokenAta = getAssociatedTokenAddressSync(config.mint, agent.publicKey, true, TOKEN_2022_PROGRAM_ID);
   const balanceBefore = await getTokenBalance(connection, agentTokenAta);
   if (balanceBefore > BigInt(0)) {
@@ -134,15 +151,19 @@ async function doBuyback(
   const solBn = new BN(Math.floor(solAmount * LAMPORTS_PER_SOL));
 
   if (isMigrated) {
+    await rpcDelay();
     const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
     const poolKey = PumpSwap.canonicalPumpPoolPda(config.mint);
     const swapState = await onlineAmm.swapSolanaState(poolKey, agent.publicKey);
     const buyIx = await PumpSwap.PUMP_AMM_SDK.buyQuoteInput(swapState, solBn, 2);
     const tx = new Transaction().add(...buyIx);
+    await rpcDelay();
     await sendAndConfirm(connection, tx, agent);
     console.log(`  Buyback (AMM): ${solAmount.toFixed(4)} SOL`);
   } else {
+    await rpcDelay();
     const global = await sdk.fetchGlobal();
+    await rpcDelay();
     const { bondingCurveAccountInfo, bondingCurve, associatedUserAccountInfo } = await sdk.fetchBuyState(
       config.mint,
       agent.publicKey
@@ -167,16 +188,19 @@ async function doBuyback(
       tokenProgram: TOKEN_2022_PROGRAM_ID,
     });
     const tx = new Transaction().add(...buyIx);
+    await rpcDelay();
     await sendAndConfirm(connection, tx, agent);
     console.log(`  Buyback (bonding): ${solAmount.toFixed(4)} SOL → ~${amount.toString()} tokens`);
   }
 
+  await rpcDelay();
   const balanceAfter = await getTokenBalance(connection, agentTokenAta);
   const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
 
   if (boughtAmount > BigInt(0)) {
     console.log(`  [Burn] balanceBefore=${balanceBefore} balanceAfter=${balanceAfter} → brænder kun boughtAmount=${boughtAmount}`);
     const burnIx = createBurnInstruction(agentTokenAta, config.mint, agent.publicKey, boughtAmount, [], TOKEN_2022_PROGRAM_ID);
+    await rpcDelay();
     await sendAndConfirm(connection, new Transaction().add(burnIx), agent);
     console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
     return Number(boughtAmount);
@@ -189,6 +213,7 @@ async function doBuyback(
 
 async function getTokenBalance(connection: Connection, ata: PublicKey): Promise<bigint> {
   try {
+    await rpcDelay();
     const acc = await getAccount(connection, ata, "confirmed", TOKEN_2022_PROGRAM_ID);
     return acc.amount;
   } catch {
@@ -202,6 +227,7 @@ async function doAddLp(
   agent: Keypair,
   solAmount: number
 ) {
+  await rpcDelay();
   const poolKey = PumpSwap.canonicalPumpPoolPda(config.mint);
   const liquidityState = await onlineAmm.liquiditySolanaState(poolKey, agent.publicKey);
   const quoteAmount = new BN(Math.floor(solAmount * LAMPORTS_PER_SOL));
@@ -216,6 +242,7 @@ async function doAddLp(
 
   const depositIx = await pumpAmmSdk.depositInstructions(liquidityState, lpToken, slippage);
   const tx = new Transaction().add(...depositIx);
+  await rpcDelay();
   const sig = await sendAndConfirm(connection, tx, agent);
   console.log(`  Add LP: ${solAmount.toFixed(4)} SOL. Tx: ${sig}`);
 }
@@ -226,11 +253,14 @@ async function sendAndConfirm(
   signer: Keypair
 ): Promise<string> {
   tx.feePayer = signer.publicKey;
+  await rpcDelay();
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.sign(signer);
 
+  await rpcDelay();
   const sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+  await rpcDelay();
   await connection.confirmTransaction(sig);
   return sig;
 }
