@@ -53,8 +53,20 @@ async function runCycle() {
     const agent = config_js_1.config.agentKeypair;
     const sdk = new pump_sdk_1.OnlinePumpSdk(connection);
     console.log(`[${new Date().toISOString()}] Starter cyklus...`);
-    const balanceLamports = await sdk.getCreatorVaultBalanceBothPrograms(agent.publicKey);
-    const balanceSol = balanceLamports.toNumber() / LAMPORTS_PER_SOL;
+    let balanceSol = 0;
+    try {
+        const balanceLamports = await sdk.getCreatorVaultBalanceBothPrograms(agent.publicKey);
+        balanceSol = balanceLamports.toNumber() / LAMPORTS_PER_SOL;
+    }
+    catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("TokenAccountNotFoundError") || msg.includes("NotFound")) {
+            balanceSol = 0;
+        }
+        else {
+            throw err;
+        }
+    }
     if (balanceSol < config_js_1.config.minClaimSol) {
         console.log(`  For lidt at claim (${balanceSol.toFixed(4)} SOL). Spring over.`);
         return { ok: true, skipped: true, reason: "For lidt at claim", treasurySol: balanceSol };
