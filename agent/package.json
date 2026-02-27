@@ -5,7 +5,9 @@
     "build": "tsc",
     "run": "node dist/run.js",
     "schedule": "node dist/schedule.js",
-    "dev": "npm run build && npm run schedule"
+    "server": "node dist/server.js",
+    "dev": "npm run build && npm run schedule",
+    "dev:server": "npm run build && npm run server"
   },
   "dependencies": {
     "@pump-fun/pump-sdk": "^1.28.0",

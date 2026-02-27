@@ -11,7 +11,8 @@ create table if not exists agent_stats (
   thought text default '',
   thought_meta text default '',
   feed_entries jsonb default '[]',
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  last_run_at timestamptz
 );
 
 -- RLS: tillad læsning for alle (anon key)

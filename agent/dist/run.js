@@ -57,7 +57,7 @@ async function runCycle() {
     const balanceSol = balanceLamports.toNumber() / LAMPORTS_PER_SOL;
     if (balanceSol < config_js_1.config.minClaimSol) {
         console.log(`  For lidt at claim (${balanceSol.toFixed(4)} SOL). Spring over.`);
-        return;
+        return { ok: true, skipped: true, reason: "For lidt at claim", treasurySol: balanceSol };
     }
     const toCreator = balanceSol * 0.8;
     const toTreasury = balanceSol * 0.2;
@@ -81,17 +81,41 @@ async function runCycle() {
     console.log(`  Claimed ${balanceSol.toFixed(4)} SOL. Sent ${toCreator.toFixed(4)} til creator. Tx: ${sig}`);
     if (toTreasury < 0.005) {
         console.log("  Treasury andel for lille til buyback/LP. Ferdig.");
-        return;
+        return {
+            ok: true,
+            claimed: balanceSol,
+            creatorShare: toCreator,
+            boughtBackSol: 0,
+            burnedTokens: 0,
+            lpSol: 0,
+            treasurySol: balanceSol,
+        };
     }
     const buybackFraction = isMigrated ? (Math.random() > 0.5 ? 0.7 : 0.3) : 1;
     const lpFraction = isMigrated ? 1 - buybackFraction : 0;
+    const buybackAmount = toTreasury * buybackFraction;
+    const lpAmount = toTreasury * lpFraction;
+    let boughtBackSol = 0;
+    let burnedTokens = 0;
+    let lpSol = 0;
     if (buybackFraction > 0) {
-        await doBuyback(connection, sdk, agent, toTreasury * buybackFraction, isMigrated);
+        burnedTokens = await doBuyback(connection, sdk, agent, buybackAmount, isMigrated);
+        boughtBackSol = buybackAmount;
     }
     if (lpFraction > 0 && isMigrated) {
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
-        await doAddLp(connection, onlineAmm, agent, toTreasury * lpFraction);
+        await doAddLp(connection, onlineAmm, agent, lpAmount);
+        lpSol = lpAmount;
     }
+    return {
+        ok: true,
+        claimed: balanceSol,
+        creatorShare: toCreator,
+        boughtBackSol,
+        burnedTokens,
+        lpSol,
+        treasurySol: balanceSol,
+    };
 }
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     const solBn = new bn_js_1.default(Math.floor(solAmount * LAMPORTS_PER_SOL));
@@ -133,12 +157,14 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true);
     const tokenAccount = await (0, spl_token_1.getAccount)(connection, agentTokenAta);
     const balance = tokenAccount.amount;
-    if (balance > 0n) {
+    const amt = balance > 0n ? Number(balance) : 0;
+    if (amt > 0) {
         const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, balance, [], spl_token_1.TOKEN_PROGRAM_ID);
         const burnTx = new web3_js_1.Transaction().add(burnIx);
         await sendAndConfirm(connection, burnTx, agent);
         console.log(`  Burned ${balance.toString()} tokens`);
     }
+    return amt;
 }
 async function doAddLp(connection, onlineAmm, agent, solAmount) {
     const poolKey = PumpSwap.canonicalPumpPoolPda(config_js_1.config.mint);
@@ -162,7 +188,9 @@ async function sendAndConfirm(connection, tx, signer) {
     return sig;
 }
 if (require.main === module) {
-    runCycle().catch((err) => {
+    runCycle()
+        .then((r) => console.log("Resultat:", r))
+        .catch((err) => {
         console.error("Agent fejl:", err);
         process.exit(1);
     });

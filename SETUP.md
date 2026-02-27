@@ -17,6 +17,7 @@ create table if not exists agent_stats (
   thought text default '',
   thought_meta text default '',
   feed_entries jsonb default '[]',
+  last_run_at timestamptz,
   updated_at timestamptz default now()
 );
 
@@ -34,12 +35,16 @@ Sæt i Vercel → Settings → Environment Variables:
 |----------|-------------|
 | `NEXT_PUBLIC_CREATOR_ADDRESS` | Din wallet |
 | `NEXT_PUBLIC_MINT_ADDRESS` | Token mint |
-| `AGENT_PRIVATE_KEY` | Din secret (base58) |
 | `CREATOR_WALLET` | Hvor 80% går |
 | `MINT_ADDRESS` | Samme som mint |
 | `NEXT_PUBLIC_SUPABASE_URL` | Fra Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Fra Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Fra Supabase (hemmelig) |
+
+**To måder at køre agenten:**
+
+- **A) På Vercel** (private key hos Vercel): Tilføj `AGENT_PRIVATE_KEY` (base58).
+- **B) Lokalt på din PC** (anbefalet – key bliver hjemme): Sæt `AGENT_BACKEND_URL` til din ngrok-URL (fx `https://abc123.ngrok-free.app`). Se afsnit 4.
 
 ## 3. Deploy
 
@@ -47,7 +52,25 @@ Sæt i Vercel → Settings → Environment Variables:
 cd website && npm run build
 ```
 
-Push til GitHub → Vercel deployer automatisk. Cron kører hver 3. min.
+Push til GitHub → Vercel deployer automatisk.
+
+**Agent:** Kører automatisk når nogen besøger sitet – max 1x per 3 min. Ingen cron nødvendig. Virker på Hobby.
+
+## 4. Agent lokalt (PC) + ngrok (hvis private key skal blive på din PC)
+
+1. I `agent/`: `cp .env.example .env` og udfyld `AGENT_PRIVATE_KEY`, `CREATOR_WALLET`, `MINT_ADDRESS`.
+2. Start agent-serveren:
+   ```bash
+   cd agent && npm run dev:server
+   ```
+3. I en anden terminal, start ngrok:
+   ```bash
+   npx ngrok http 3456
+   ```
+4. Kopiér ngrok-URL'en (fx `https://abc123.ngrok-free.app`) og sæt den som `AGENT_BACKEND_URL` i Vercel.
+5. Sørg for at Supabase env-vars er sat på Vercel – Vercel modtager resultatet fra din PC og skriver til Supabase.
+
+**Flow:** Besøg → Vercel kalder din PC via ngrok → PC kører agent med private key → returnerer resultat → Vercel gemmer i Supabase.
 
 ---
 
