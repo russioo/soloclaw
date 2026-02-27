@@ -4,6 +4,7 @@
  * Kræver ngrok (eller lignende) for at Vercel kan nå din lokale maskine.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const http_1 = require("http");
 const run_js_1 = require("./run.js");
 const PORT = parseInt(process.env.AGENT_PORT ?? "3456", 10);

@@ -3,6 +3,7 @@
  * Kræver ngrok (eller lignende) for at Vercel kan nå din lokale maskine.
  */
 
+import "dotenv/config";
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { runCycle } from "./run.js";
 

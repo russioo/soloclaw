@@ -118,6 +118,8 @@ async function runCycle() {
     };
 }
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
+    const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true);
+    const balanceBefore = await getTokenBalance(connection, agentTokenAta);
     const solBn = new bn_js_1.default(Math.floor(solAmount * LAMPORTS_PER_SOL));
     if (isMigrated) {
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
@@ -154,17 +156,24 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
         await sendAndConfirm(connection, tx, agent);
         console.log(`  Buyback (bonding): ${solAmount.toFixed(4)} SOL → ~${amount.toString()} tokens`);
     }
-    const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true);
-    const tokenAccount = await (0, spl_token_1.getAccount)(connection, agentTokenAta);
-    const balance = tokenAccount.amount;
-    const amt = balance > 0n ? Number(balance) : 0;
-    if (amt > 0) {
-        const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, balance, [], spl_token_1.TOKEN_PROGRAM_ID);
-        const burnTx = new web3_js_1.Transaction().add(burnIx);
-        await sendAndConfirm(connection, burnTx, agent);
-        console.log(`  Burned ${balance.toString()} tokens`);
+    const balanceAfter = await getTokenBalance(connection, agentTokenAta);
+    const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
+    if (boughtAmount > BigInt(0)) {
+        const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, boughtAmount, [], spl_token_1.TOKEN_PROGRAM_ID);
+        await sendAndConfirm(connection, new web3_js_1.Transaction().add(burnIx), agent);
+        console.log(`  Burned ${boughtAmount.toString()} tokens (kun fra denne buyback)`);
+        return Number(boughtAmount);
     }
-    return amt;
+    return 0;
+}
+async function getTokenBalance(connection, ata) {
+    try {
+        const acc = await (0, spl_token_1.getAccount)(connection, ata);
+        return acc.amount;
+    }
+    catch {
+        return BigInt(0);
+    }
 }
 async function doAddLp(connection, onlineAmm, agent, solAmount) {
     const poolKey = PumpSwap.canonicalPumpPoolPda(config_js_1.config.mint);
