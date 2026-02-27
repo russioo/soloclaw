@@ -163,7 +163,7 @@ async function doBuyback(
 
   const agentTokenAta = getAssociatedTokenAddressSync(mint, agent.publicKey, true);
   const tokenAccount = await getAccount(connection, agentTokenAta);
-  const amt = tokenAccount.amount > 0n ? Number(tokenAccount.amount) : 0;
+  const amt = Number(tokenAccount.amount) || 0;
   if (amt > 0) {
     const burnIx = createBurnInstruction(
       agentTokenAta,
