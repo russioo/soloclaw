@@ -3,7 +3,6 @@
  * Kræver ngrok (eller lignende) for at Vercel kan nå din lokale maskine.
  */
 
-import "dotenv/config";
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { runCycle } from "./run.js";
 
@@ -51,7 +50,10 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
+  const rpc = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || "";
+  const rpcLabel = rpc.includes("quiknode") ? "QuickNode" : rpc ? "Custom RPC" : "IKKE SAT";
   console.log(`[Agent] Server på http://localhost:${PORT}`);
+  console.log(`[Agent] RPC: ${rpcLabel}`);
   console.log(`[Agent] /health = status  /run = kør cyklus`);
   console.log(`[Agent] Kør i anden terminal: npx ngrok http ${PORT}`);
   console.log(`[Agent] Sæt ngrok URL i Vercel: AGENT_BACKEND_URL`);

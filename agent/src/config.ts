@@ -1,5 +1,10 @@
+import { join } from "path";
+import dotenv from "dotenv";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
+
+dotenv.config();
+dotenv.config({ path: join(process.cwd(), ".env.local"), override: true });
 
 function loadKeypair(secret: string): Keypair {
   if (!secret || secret.trim() === "") {
@@ -14,16 +19,22 @@ function loadKeypair(secret: string): Keypair {
   }
 }
 
+const DEFAULT_RPC =
+  "https://chaotic-divine-scion.solana-mainnet.quiknode.pro/d1288954635c3b57dac38bb5b7c529128a4a3efe/";
+
 function parseRpcUrl(raw: string | undefined): string {
-  const url = (raw ?? "https://api.mainnet-beta.solana.com").trim();
+  const url = (raw ?? DEFAULT_RPC).trim();
+  if (!url) throw new Error("RPC_URL mangler");
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
     throw new Error(`RPC_URL skal starte med http:// eller https://. Fik: "${url.slice(0, 50)}..."`);
   }
   return url;
 }
 
+const rpcRaw = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || DEFAULT_RPC;
+
 export const config = {
-  rpcUrl: parseRpcUrl(process.env.RPC_URL),
+  rpcUrl: parseRpcUrl(rpcRaw),
   agentKeypair: loadKeypair(process.env.AGENT_PRIVATE_KEY ?? ""),
   creatorWallet: new PublicKey(process.env.CREATOR_WALLET ?? "11111111111111111111111111111111"),
   mint: new PublicKey(process.env.MINT_ADDRESS ?? "11111111111111111111111111111111"),

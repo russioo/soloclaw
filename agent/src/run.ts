@@ -254,15 +254,29 @@ async function sendAndConfirm(
 ): Promise<string> {
   tx.feePayer = signer.publicKey;
   await rpcDelay();
-  const { blockhash } = await connection.getLatestBlockhash();
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
   tx.recentBlockhash = blockhash;
   tx.sign(signer);
 
   await rpcDelay();
   const sig = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
   await rpcDelay();
-  await connection.confirmTransaction(sig);
-  return sig;
+
+  try {
+    await connection.confirmTransaction(
+      { signature: sig, blockhash, lastValidBlockHeight },
+      "confirmed"
+    );
+    return sig;
+  } catch (err) {
+    // Tjek om tx faktisk landede (RPC kan timeout selvom tx gik igennem)
+    const status = await connection.getSignatureStatus(sig).catch(() => null);
+    if (status?.value?.confirmationStatus === "confirmed" || status?.value?.confirmationStatus === "finalized") {
+      console.log(`  [Bekræftelse] Tx ${sig.slice(0, 16)}... ok (RPC timeout, men tx landede)`);
+      return sig;
+    }
+    throw err;
+  }
 }
 
 if (require.main === module) {
