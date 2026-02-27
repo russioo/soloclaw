@@ -10,8 +10,6 @@ export function useAgentData(): AgentState {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/trigger-agent").catch(() => {});
-
     const fetchStats = async () => {
       try {
         const res = await fetch("/api/agent-stats");

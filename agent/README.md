@@ -11,10 +11,24 @@ cp .env.example .env
 npm install
 ```
 
-## Kør manuelt
+## Kør manuelt (buyback + burn → gem til DB)
 
 ```bash
 npm run build
+npm run buyback
+```
+
+Kører claim → 80% creator, 20% buyback+burn (og LP hvis migrated). Gemmer resultat til Supabase – hjemmesiden læser derfra.
+
+Tilføj til `.env` for at gemme til DB:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=xxx
+```
+
+## Kør én cyklus (uden DB)
+
+```bash
 npm run run
 ```
 

@@ -1,7 +1,7 @@
 "use strict";
 /**
- * HTTP server – eksponerer /run så Vercel kan kalde agenten på din PC.
- * Kræver ngrok (eller lignende) for at Vercel kan nå din lokale maskine.
+ * Backend: HTTP server med /run – kører kun når du trigger (manuel eller via visit).
+ * Ingen automatisk schedule – du siger til når der skal køres.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_1 = require("http");
@@ -52,7 +52,6 @@ server.listen(PORT, () => {
     const rpcLabel = rpc.includes("quiknode") ? "QuickNode" : rpc ? "Custom RPC" : "IKKE SAT";
     console.log(`[Agent] Server på http://localhost:${PORT}`);
     console.log(`[Agent] RPC: ${rpcLabel}`);
-    console.log(`[Agent] /health = status  /run = kør cyklus`);
-    console.log(`[Agent] Kør i anden terminal: npx ngrok http ${PORT}`);
-    console.log(`[Agent] Sæt ngrok URL i Vercel: AGENT_BACKEND_URL`);
+    console.log(`[Agent] /health = status  /run = kør cyklus (on-demand)`);
+    console.log(`[Agent] Trigger: fortæl mig "kør agenten" eller besøg sitet (hvis ngrok)`);
 });

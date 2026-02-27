@@ -115,23 +115,24 @@ async function runCycle() {
             treasurySol: balanceSol,
         };
     }
-    const buybackFraction = isMigrated ? (Math.random() > 0.5 ? 0.7 : 0.3) : 1;
-    const lpFraction = isMigrated ? 1 - buybackFraction : 0;
+    // Bonding curve: 100% buyback + burn. Migrated (AMM): 50% add LP, 50% buyback + burn.
+    const buybackFraction = isMigrated ? 0.5 : 1;
+    const lpFraction = isMigrated ? 0.5 : 0;
     const buybackAmount = toTreasury * buybackFraction;
     const lpAmount = toTreasury * lpFraction;
     let boughtBackSol = 0;
     let burnedTokens = 0;
     let lpSol = 0;
-    if (buybackFraction > 0) {
-        await rpcDelay();
-        burnedTokens = await doBuyback(connection, sdk, agent, buybackAmount, isMigrated);
-        boughtBackSol = buybackAmount;
-    }
     if (lpFraction > 0 && isMigrated) {
         await rpcDelay();
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
         await doAddLp(connection, onlineAmm, agent, lpAmount);
         lpSol = lpAmount;
+    }
+    if (buybackFraction > 0) {
+        await rpcDelay();
+        burnedTokens = await doBuyback(connection, sdk, agent, buybackAmount, isMigrated);
+        boughtBackSol = buybackAmount;
     }
     return {
         ok: true,

@@ -15,7 +15,7 @@ create table if not exists agent_stats (
   last_run_at timestamptz
 );
 
--- RLS: tillad læsning for alle (anon key)
+-- RLS: læsning for alle (anon), skrivning via service_role (bypasser RLS)
 alter table agent_stats enable row level security;
 
 create policy "Allow public read" on agent_stats for select using (true);
