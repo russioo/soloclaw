@@ -44,9 +44,6 @@ async function saveAgentCycle(result) {
         if (result.claimed && result.claimed > 0) {
             newEntries.push({ time: timeStr, action: "Claimed fees", detail: `${result.claimed.toFixed(4)} SOL from creator vault` });
         }
-        if (result.creatorShare && result.creatorShare > 0) {
-            newEntries.push({ time: timeStr, action: "Sent to creator", detail: `${result.creatorShare.toFixed(4)} SOL (80%)` });
-        }
         if (result.boughtBackSol && result.boughtBackSol > 0) {
             newEntries.push({ time: timeStr, action: "Buyback", detail: `Spent ${result.boughtBackSol.toFixed(4)} SOL` });
         }
@@ -69,7 +66,6 @@ async function saveAgentCycle(result) {
         thought_meta: prev.thought_meta ?? "— SoloClaw",
         feed_entries: feed,
         updated_at: new Date().toISOString(),
-        last_run_at: new Date().toISOString(),
     };
     await admin.from("agent_stats").upsert({ id: "default", ...updates }, { onConflict: "id" });
     console.log("[db] Gemt til Supabase");

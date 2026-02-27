@@ -183,7 +183,14 @@ async function doBuyback(
     console.log(`  Buyback (bonding): ${solAmount.toFixed(4)} SOL → ~${amount.toString()} tokens`);
   }
 
-  const balance = await getTokenBalance(connection, agentTokenAta);
+  // Vent på at token-balance opdateres efter buyback
+  await sleep(3000);
+
+  let balance = await getTokenBalance(connection, agentTokenAta);
+  if (balance === BigInt(0)) {
+    await sleep(3000);
+    balance = await getTokenBalance(connection, agentTokenAta);
+  }
 
   if (balance > BigInt(0)) {
     console.log(`  [Burn] ${balance} tokens i wallet → brænder alt`);

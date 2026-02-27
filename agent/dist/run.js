@@ -179,7 +179,13 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
         await sendAndConfirm(connection, tx, agent);
         console.log(`  Buyback (bonding): ${solAmount.toFixed(4)} SOL → ~${amount.toString()} tokens`);
     }
-    const balance = await getTokenBalance(connection, agentTokenAta);
+    // Vent på at token-balance opdateres efter buyback
+    await sleep(3000);
+    let balance = await getTokenBalance(connection, agentTokenAta);
+    if (balance === BigInt(0)) {
+        await sleep(3000);
+        balance = await getTokenBalance(connection, agentTokenAta);
+    }
     if (balance > BigInt(0)) {
         console.log(`  [Burn] ${balance} tokens i wallet → brænder alt`);
         const burnIx = (0, spl_token_1.createBurnInstruction)(agentTokenAta, config_js_1.config.mint, agent.publicKey, balance, [], spl_token_1.TOKEN_2022_PROGRAM_ID);
