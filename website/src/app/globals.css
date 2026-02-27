@@ -21,10 +21,8 @@ body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
   overflow-x: hidden;
-  cursor: none;
 }
 
-@media (pointer: coarse) { body { cursor: auto; } }
 
 
 ::selection { background: var(--ink); color: var(--bg); }
@@ -35,6 +33,47 @@ a { color: inherit; text-decoration: none; }
   z-index: 2;
   min-height: 100vh;
   padding: 48px;
+}
+
+/* ====== HOME HEADER (floating) ====== */
+
+.home-header {
+  position: fixed;
+  top: 28px;
+  right: 28px;
+  z-index: 100;
+}
+
+.home-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(28, 28, 28, 0.04);
+  border-radius: 12px;
+}
+
+.home-header-nav a {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--ink);
+  opacity: 0.65;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.home-header-nav a:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .home-header { top: 20px; right: 20px; }
+  .home-header-nav { gap: 20px; padding: 10px 18px; }
+  .home-header-nav a { font-size: 10px; }
 }
 
 /* ====== S1: HERO WITH CLOUDS ====== */
@@ -156,7 +195,8 @@ a { color: inherit; text-decoration: none; }
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: var(--dim);
+  color: var(--ink);
+  opacity: 0.75;
 }
 
 .s1-cta { margin-top: 8px; }
@@ -492,37 +532,114 @@ a { color: inherit; text-decoration: none; }
 
 .s6-link:hover::after { width: 100%; }
 
-/* ====== CUSTOM CURSOR ====== */
+/* ====== DOCS ====== */
 
-.cursor-dot {
-  position: fixed;
-  top: -4px;
-  left: -4px;
-  width: 8px;
-  height: 8px;
-  background: var(--ink);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: difference;
+.docs-layout {
+  min-height: 100vh;
+  background: var(--bg);
 }
 
-.cursor-ring {
-  position: fixed;
-  top: -20px;
-  left: -20px;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--ink);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
-  opacity: 0.4;
-  mix-blend-mode: difference;
+.docs-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 64px 48px 120px;
 }
 
-@media (pointer: coarse) {
-  .cursor-dot, .cursor-ring { display: none; }
+.docs-back {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--mid);
+  margin-bottom: 48px;
+  text-decoration: none;
+}
+
+.docs-back:hover {
+  color: var(--accent);
+}
+
+.docs-article h1 {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 24px;
+  color: var(--ink);
+}
+
+.docs-article h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 48px;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+
+.docs-steps {
+  list-style: decimal;
+  padding-left: 24px;
+  margin: 16px 0 24px;
+}
+
+.docs-steps li {
+  margin-bottom: 20px;
+  padding-left: 8px;
+}
+
+.docs-steps li::before {
+  display: none;
+}
+
+.docs-article code {
+  font-size: 13px;
+  background: var(--line);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.docs-lead {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--mid);
+  margin-bottom: 32px;
+}
+
+.docs-article ul {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.docs-article li {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--ink);
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+}
+
+.docs-article li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.docs-article a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.docs-article a:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 768px) {
+  .docs-main { padding: 40px 24px 80px; }
 }
 
 /* ====== RESPONSIVE ====== */

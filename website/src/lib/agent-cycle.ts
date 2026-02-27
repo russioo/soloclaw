@@ -123,6 +123,9 @@ async function doBuyback(
   solAmount: number,
   isMigrated: boolean
 ): Promise<number> {
+  const agentTokenAta = getAssociatedTokenAddressSync(mint, agent.publicKey, true);
+  const balanceBefore = await getTokenBalance(connection, agentTokenAta);
+
   const solBn = new BN(Math.floor(solAmount * LAMPORTS_PER_SOL));
 
   if (isMigrated) {
@@ -161,21 +164,31 @@ async function doBuyback(
     await sendAndConfirm(connection, tx, agent);
   }
 
-  const agentTokenAta = getAssociatedTokenAddressSync(mint, agent.publicKey, true);
-  const tokenAccount = await getAccount(connection, agentTokenAta);
-  const amt = Number(tokenAccount.amount) || 0;
-  if (amt > 0) {
+  const balanceAfter = await getTokenBalance(connection, agentTokenAta);
+  const boughtAmount = BigInt(Math.max(0, Number(balanceAfter) - Number(balanceBefore)));
+
+  if (boughtAmount > BigInt(0)) {
     const burnIx = createBurnInstruction(
       agentTokenAta,
       mint,
       agent.publicKey,
-      tokenAccount.amount,
+      boughtAmount,
       [],
       TOKEN_PROGRAM_ID
     );
     await sendAndConfirm(connection, new Transaction().add(burnIx), agent);
+    return Number(boughtAmount);
   }
-  return amt;
+  return 0;
+}
+
+async function getTokenBalance(connection: Connection, ata: PublicKey): Promise<bigint> {
+  try {
+    const acc = await getAccount(connection, ata);
+    return acc.amount;
+  } catch {
+    return BigInt(0);
+  }
 }
 
 async function doAddLp(

@@ -1,3 +1,4 @@
+import HomeHeader from "@/components/HomeHeader";
 import Spread1 from "@/components/Spread1";
 import Marquee from "@/components/Marquee";
 import HowItWorks from "@/components/HowItWorks";
@@ -9,6 +10,7 @@ import Spread6 from "@/components/Spread6";
 export default function Home() {
   return (
     <>
+      <HomeHeader />
       <Spread1 />
       <Marquee />
       <HowItWorks />

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
-import CustomCursor from "@/components/CustomCursor";
 
 export const metadata: Metadata = {
   title: "SoloClaw",
@@ -17,7 +16,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <SmoothScroll>
-          <CustomCursor />
           {children}
         </SmoothScroll>
       </body>

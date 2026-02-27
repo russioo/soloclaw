@@ -6,7 +6,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export const maxDuration = 60;
 
-const MIN_INTERVAL_MS = 3 * 60 * 1000; // 3 min
+const MIN_INTERVAL_MS =
+  process.env.NODE_ENV === "development"
+    ? (parseInt(process.env.AGENT_DEV_INTERVAL_SEC ?? "10", 10) * 1000)
+    : 2 * 60 * 1000; // 2 min prod
 
 /** Kører agenten når nogen besøger sitet – max 1x per 3 min. Ingen cron nødvendig. */
 export async function GET() {
