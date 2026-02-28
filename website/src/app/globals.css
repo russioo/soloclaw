@@ -734,6 +734,97 @@ a { color: inherit; text-decoration: none; }
   .s6-link { font-size: 10px; }
 }
 
+/* ====== PROOF PAGE ====== */
+
+.proof-page { max-width: 900px; margin: 0 auto; padding-top: 24px; }
+
+.proof-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.proof-subtitle {
+  font-size: 13px;
+  color: var(--mid);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.proof-stats {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.proof-stat { display: flex; flex-direction: column; gap: 2px; }
+.proof-stat-num { font-size: 24px; font-weight: 700; letter-spacing: -1px; }
+.proof-stat-label { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 1px; }
+
+.proof-loading { font-size: 13px; color: var(--mid); }
+
+.proof-table { display: flex; flex-direction: column; }
+
+.proof-row {
+  display: grid;
+  grid-template-columns: 80px 72px 1fr 160px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.proof-header-row {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--mid);
+  font-weight: 700;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 8px;
+}
+
+.proof-col-time { color: var(--mid); font-variant-numeric: tabular-nums; }
+.proof-col-detail { color: var(--ink); }
+
+.proof-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--bg);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.proof-sig {
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--accent);
+  transition: opacity 0.15s;
+}
+
+.proof-sig:hover { opacity: 0.7; }
+
+.proof-no-sig { color: var(--dim); font-size: 11px; }
+
+@media (max-width: 640px) {
+  .proof-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 12px 0;
+  }
+  .proof-header-row { display: none; }
+  .proof-col-tx { margin-top: 4px; }
+}
+
 /* Small mobile – maksimalt zoomet ud */
 @media (max-width: 480px) {
   .spread { padding: 20px 16px; }

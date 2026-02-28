@@ -3,6 +3,7 @@ export type AgentFeedEntry = {
   time: string;
   action: string;
   detail: string;
+  sig?: string;
 };
 
 export type AgentStats = {

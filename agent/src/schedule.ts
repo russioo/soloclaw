@@ -40,6 +40,7 @@ async function tick() {
         treasurySol: result.treasurySol,
         skipped: isSkipped,
         thought,
+        txs: "txs" in result ? result.txs : undefined,
       });
     }
   } catch (err) {

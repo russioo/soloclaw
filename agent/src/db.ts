@@ -13,7 +13,7 @@ function getSupabase() {
   return createClient(url, serviceKey, { auth: { persistSession: false } });
 }
 
-type FeedEntry = { time: string; action: string; detail: string };
+type FeedEntry = { time: string; action: string; detail: string; sig?: string };
 
 export async function getStats() {
   const admin = getSupabase();
@@ -31,6 +31,7 @@ export async function saveAgentCycle(result: {
   treasurySol?: number;
   thought?: string;
   skipped?: boolean;
+  txs?: { sig: string; type: string; time: string }[];
 }) {
   const admin = getSupabase();
   if (!admin) {
@@ -54,7 +55,12 @@ export async function saveAgentCycle(result: {
 
   const burnedHuman = (result.burnedTokens ?? 0) / Math.pow(10, TOKEN_DECIMALS);
 
-  // Byg feed entries (max 20 nyeste)
+  // Build a sig lookup: type → signature
+  const sigMap = new Map<string, string>();
+  for (const tx of result.txs ?? []) {
+    sigMap.set(tx.type, tx.sig);
+  }
+
   const prevFeed: FeedEntry[] = Array.isArray(prev.feed_entries) ? prev.feed_entries : [];
   const newEntries: FeedEntry[] = [];
   const now = new Date();
@@ -64,20 +70,21 @@ export async function saveAgentCycle(result: {
     newEntries.push({ time: timeStr, action: "Scanned", detail: `Vault has ${(result.treasurySol ?? 0).toFixed(4)} SOL — waiting for more fees` });
   } else {
     if (result.claimed && result.claimed > 0) {
-      newEntries.push({ time: timeStr, action: "Claimed fees", detail: `${result.claimed.toFixed(4)} SOL from creator vault` });
+      newEntries.push({ time: timeStr, action: "Claimed fees", detail: `${result.claimed.toFixed(4)} SOL from creator vault`, sig: sigMap.get("claim") });
     }
     if (result.boughtBackSol && result.boughtBackSol > 0) {
-      newEntries.push({ time: timeStr, action: "Buyback", detail: `Spent ${result.boughtBackSol.toFixed(4)} SOL` });
+      newEntries.push({ time: timeStr, action: "Buyback", detail: `Spent ${result.boughtBackSol.toFixed(4)} SOL`, sig: sigMap.get("buyback") });
     }
     if (burnedHuman > 0) {
-      newEntries.push({ time: timeStr, action: "Burned tokens", detail: `${burnedHuman.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens removed from supply` });
+      newEntries.push({ time: timeStr, action: "Burned tokens", detail: `${burnedHuman.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens removed from supply`, sig: sigMap.get("burn") });
     }
     if (result.lpSol && result.lpSol > 0) {
-      newEntries.push({ time: timeStr, action: "Added LP", detail: `${result.lpSol.toFixed(4)} SOL to liquidity pool` });
+      newEntries.push({ time: timeStr, action: "Added LP", detail: `${result.lpSol.toFixed(4)} SOL to liquidity pool`, sig: sigMap.get("lp-deposit") || sigMap.get("lp-buy") });
     }
   }
 
-  const feed = [...newEntries, ...prevFeed].slice(0, 20);
+  // Max 50 entries (for proof page)
+  const feed = [...newEntries, ...prevFeed].slice(0, 50);
 
   const updates = {
     total_claimed: (prev.total_claimed ?? 0) + (result.claimed ?? 0),
