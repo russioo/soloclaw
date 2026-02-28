@@ -140,18 +140,17 @@ async function runCycle() {
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
     const agentTokenAta = (0, spl_token_1.getAssociatedTokenAddressSync)(config_js_1.config.mint, agent.publicKey, true, spl_token_1.TOKEN_2022_PROGRAM_ID);
     const solBn = new bn_js_1.default(Math.floor(solAmount * LAMPORTS_PER_SOL));
-    if (isMigrated) {
+    async function buyViaAmm() {
         const onlineAmm = new PumpSwap.OnlinePumpAmmSdk(connection);
         const poolKey = PumpSwap.canonicalPumpPoolPda(config_js_1.config.mint);
         const swapState = await onlineAmm.swapSolanaState(poolKey, agent.publicKey);
         const buyIx = await PumpSwap.PUMP_AMM_SDK.buyQuoteInput(swapState, solBn, 2);
-        // PumpFun v2: tilføj pool_v2 PDA til AMM buy-instruktioner
         appendV2Account(buyIx, PUMP_AMM_PROGRAM_ID, poolV2Pda(config_js_1.config.mint));
         const tx = new web3_js_1.Transaction().add(...buyIx);
         await sendAndConfirm(connection, tx, agent);
         console.log(`  Buyback (AMM): ${solAmount.toFixed(4)} SOL`);
     }
-    else {
+    async function buyViaBondingCurve() {
         const global = await sdk.fetchGlobal();
         const { bondingCurveAccountInfo, bondingCurve, associatedUserAccountInfo } = await sdk.fetchBuyState(config_js_1.config.mint, agent.publicKey, spl_token_1.TOKEN_2022_PROGRAM_ID);
         const amount = (0, pump_sdk_1.getBuyTokenAmountFromSolAmount)({
@@ -173,11 +172,28 @@ async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {
             slippage: 2,
             tokenProgram: spl_token_1.TOKEN_2022_PROGRAM_ID,
         });
-        // PumpFun v2: tilføj bonding_curve_v2 PDA til bonding curve buy-instruktioner
         appendV2Account(buyIx, PUMP_PROGRAM_ID, bondingCurveV2Pda(config_js_1.config.mint));
         const tx = new web3_js_1.Transaction().add(...buyIx);
         await sendAndConfirm(connection, tx, agent);
         console.log(`  Buyback (bonding): ${solAmount.toFixed(4)} SOL → ~${amount.toString()} tokens`);
+    }
+    if (isMigrated) {
+        await buyViaAmm();
+    }
+    else {
+        try {
+            await buyViaBondingCurve();
+        }
+        catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes("BondingCurveComplete") || msg.includes("0x1775")) {
+                console.log("  Bonding curve complete – skifter til AMM...");
+                await buyViaAmm();
+            }
+            else {
+                throw err;
+            }
+        }
     }
     // Vent på at token-balance opdateres efter buyback
     await sleep(3000);

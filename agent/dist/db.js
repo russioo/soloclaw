@@ -3,6 +3,7 @@
  * Gemmer agent-cyklus til Supabase. Hjemmesiden læser herfra.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getStats = getStats;
 exports.saveAgentCycle = saveAgentCycle;
 const supabase_js_1 = require("@supabase/supabase-js");
 const TOKEN_DECIMALS = 6; // pump.fun default
@@ -12,6 +13,13 @@ function getSupabase() {
     if (!url || !serviceKey)
         return null;
     return (0, supabase_js_1.createClient)(url, serviceKey, { auth: { persistSession: false } });
+}
+async function getStats() {
+    const admin = getSupabase();
+    if (!admin)
+        return null;
+    const { data } = await admin.from("agent_stats").select("*").eq("id", "default").single();
+    return data;
 }
 async function saveAgentCycle(result) {
     const admin = getSupabase();

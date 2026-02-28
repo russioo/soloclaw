@@ -15,6 +15,13 @@ function getSupabase() {
 
 type FeedEntry = { time: string; action: string; detail: string };
 
+export async function getStats() {
+  const admin = getSupabase();
+  if (!admin) return null;
+  const { data } = await admin.from("agent_stats").select("*").eq("id", "default").single();
+  return data;
+}
+
 export async function saveAgentCycle(result: {
   claimed?: number;
   creatorShare?: number;

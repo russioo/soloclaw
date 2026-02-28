@@ -8,12 +8,26 @@ require("dotenv/config");
 const config_js_1 = require("./config.js");
 const run_js_1 = require("./run.js");
 const db_js_1 = require("./db.js");
+const thought_js_1 = require("./thought.js");
 async function tick() {
     try {
         const result = await (0, run_js_1.runCycle)();
         console.log("Resultat:", JSON.stringify(result));
         if (result.ok) {
             const isSkipped = "skipped" in result && result.skipped;
+            const stats = await (0, db_js_1.getStats)();
+            const thought = await (0, thought_js_1.generateThought)({
+                claimed: "claimed" in result ? result.claimed : undefined,
+                boughtBackSol: "boughtBackSol" in result ? result.boughtBackSol : undefined,
+                burnedTokens: "burnedTokens" in result ? result.burnedTokens : undefined,
+                lpSol: "lpSol" in result ? result.lpSol : undefined,
+                treasurySol: result.treasurySol,
+                skipped: isSkipped,
+                totalClaimed: stats?.total_claimed ?? 0,
+                totalBurned: stats?.total_burned ?? 0,
+                totalBoughtBack: stats?.total_bought_back ?? 0,
+            });
+            console.log(`[thought] "${thought}"`);
             await (0, db_js_1.saveAgentCycle)({
                 claimed: "claimed" in result ? result.claimed : undefined,
                 creatorShare: "creatorShare" in result ? result.creatorShare : undefined,
@@ -22,9 +36,7 @@ async function tick() {
                 lpSol: "lpSol" in result ? result.lpSol : undefined,
                 treasurySol: result.treasurySol,
                 skipped: isSkipped,
-                thought: isSkipped
-                    ? "Scanning for fees…"
-                    : `Claimed ${("claimed" in result ? result.claimed : 0)?.toFixed(2) ?? "0"} SOL — bought back & burned`,
+                thought,
             });
         }
     }

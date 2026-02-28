@@ -5,7 +5,8 @@
 import "dotenv/config";
 import { config } from "./config.js";
 import { runCycle } from "./run.js";
-import { saveAgentCycle } from "./db.js";
+import { saveAgentCycle, getStats } from "./db.js";
+import { generateThought } from "./thought.js";
 
 async function tick() {
   try {
@@ -14,6 +15,22 @@ async function tick() {
 
     if (result.ok) {
       const isSkipped = "skipped" in result && result.skipped;
+      const stats = await getStats();
+
+      const thought = await generateThought({
+        claimed: "claimed" in result ? result.claimed : undefined,
+        boughtBackSol: "boughtBackSol" in result ? result.boughtBackSol : undefined,
+        burnedTokens: "burnedTokens" in result ? result.burnedTokens : undefined,
+        lpSol: "lpSol" in result ? result.lpSol : undefined,
+        treasurySol: result.treasurySol,
+        skipped: isSkipped,
+        totalClaimed: stats?.total_claimed ?? 0,
+        totalBurned: stats?.total_burned ?? 0,
+        totalBoughtBack: stats?.total_bought_back ?? 0,
+      });
+
+      console.log(`[thought] "${thought}"`);
+
       await saveAgentCycle({
         claimed: "claimed" in result ? result.claimed : undefined,
         creatorShare: "creatorShare" in result ? result.creatorShare : undefined,
@@ -22,9 +39,7 @@ async function tick() {
         lpSol: "lpSol" in result ? result.lpSol : undefined,
         treasurySol: result.treasurySol,
         skipped: isSkipped,
-        thought: isSkipped
-          ? "Scanning for fees…"
-          : `Claimed ${("claimed" in result ? result.claimed : 0)?.toFixed(2) ?? "0"} SOL — bought back & burned`,
+        thought,
       });
     }
   } catch (err) {
