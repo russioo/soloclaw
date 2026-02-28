@@ -72,7 +72,13 @@ export default function ThoughtsPage() {
           <span className="th-stat-label">SOL claimed</span>
         </div>
         <div className="th-stat">
-          <span className="th-stat-val">{(stats.totalBurned / 1000).toFixed(0)}K</span>
+          <span className="th-stat-val">
+          {stats.totalBurned >= 1_000_000
+            ? `${(stats.totalBurned / 1_000_000).toFixed(1)}M`
+            : stats.totalBurned >= 1_000
+              ? `${(stats.totalBurned / 1_000).toFixed(1)}K`
+              : stats.totalBurned.toFixed(0)}
+        </span>
           <span className="th-stat-label">Tokens burned</span>
         </div>
         <div className="th-stat">
