@@ -35,9 +35,33 @@ function sleep(ms: number): Promise<void> {
 
 export type TxRecord = { sig: string; type: "claim" | "buyback" | "burn" | "lp-buy" | "lp-deposit"; time: string };
 
+export type Strategy = {
+  name: string;
+  buybackFraction: number;
+  lpFraction: number;
+};
+
+const STRATEGIES: (Strategy & { weight: number })[] = [
+  { name: "burn-heavy",  buybackFraction: 0.85, lpFraction: 0.15, weight: 30 },
+  { name: "balanced",    buybackFraction: 0.50, lpFraction: 0.50, weight: 25 },
+  { name: "lp-focus",    buybackFraction: 0.15, lpFraction: 0.85, weight: 20 },
+  { name: "full-burn",   buybackFraction: 1.0,  lpFraction: 0.0,  weight: 15 },
+  { name: "full-lp",     buybackFraction: 0.0,  lpFraction: 1.0,  weight: 10 },
+];
+
+function pickStrategy(): Strategy {
+  const totalWeight = STRATEGIES.reduce((sum, s) => sum + s.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const s of STRATEGIES) {
+    roll -= s.weight;
+    if (roll <= 0) return { name: s.name, buybackFraction: s.buybackFraction, lpFraction: s.lpFraction };
+  }
+  return STRATEGIES[0];
+}
+
 export type CycleResult =
   | { ok: true; skipped: true; reason: string; treasurySol?: number }
-  | { ok: true; claimed: number; creatorShare: number; boughtBackSol: number; burnedTokens: number; lpSol: number; treasurySol?: number; txs?: TxRecord[] }
+  | { ok: true; claimed: number; creatorShare: number; boughtBackSol: number; burnedTokens: number; lpSol: number; treasurySol?: number; txs?: TxRecord[]; strategy?: string }
   | { ok: false; error: string };
 
 export async function runCycle(): Promise<CycleResult> {
@@ -116,8 +140,16 @@ export async function runCycle(): Promise<CycleResult> {
     };
   }
 
-  const buybackFraction = isMigrated ? 0.5 : 1;
-  const lpFraction = isMigrated ? 0.5 : 0;
+  let strategy: Strategy;
+  if (isMigrated) {
+    strategy = pickStrategy();
+    console.log(`  Strategy: ${strategy.name} (${Math.round(strategy.buybackFraction * 100)}% buyback, ${Math.round(strategy.lpFraction * 100)}% LP)`);
+  } else {
+    strategy = { name: "bonding-curve", buybackFraction: 1, lpFraction: 0 };
+  }
+
+  const buybackFraction = strategy.buybackFraction;
+  const lpFraction = strategy.lpFraction;
   let buybackAmount = netSol * buybackFraction;
   const lpAmount = netSol * lpFraction;
 
@@ -153,6 +185,7 @@ export async function runCycle(): Promise<CycleResult> {
     lpSol,
     treasurySol: netSol,
     txs,
+    strategy: strategy.name,
   };
 }
 

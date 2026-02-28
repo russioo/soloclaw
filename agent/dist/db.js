@@ -66,8 +66,15 @@ async function saveAgentCycle(result) {
             newEntries.push({ time: timeStr, action: "Added LP", detail: `${result.lpSol.toFixed(4)} SOL to liquidity pool`, sig: sigMap.get("lp-deposit") || sigMap.get("lp-buy") });
         }
     }
-    // Max 50 entries (for proof page)
-    const feed = [...newEntries, ...prevFeed].slice(0, 50);
+    if (result.thought) {
+        newEntries.push({
+            time: timeStr,
+            action: "Thought",
+            detail: result.thought,
+            strategy: result.strategy,
+        });
+    }
+    const feed = [...newEntries, ...prevFeed].slice(0, 200);
     const updates = {
         total_claimed: (prev.total_claimed ?? 0) + (result.claimed ?? 0),
         total_creator_share: (prev.total_creator_share ?? 0) + (result.creatorShare ?? 0),

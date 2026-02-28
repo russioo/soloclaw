@@ -13,7 +13,7 @@ function getSupabase() {
   return createClient(url, serviceKey, { auth: { persistSession: false } });
 }
 
-type FeedEntry = { time: string; action: string; detail: string; sig?: string };
+type FeedEntry = { time: string; action: string; detail: string; sig?: string; strategy?: string };
 
 export async function getStats() {
   const admin = getSupabase();
@@ -31,6 +31,7 @@ export async function saveAgentCycle(result: {
   treasurySol?: number;
   thought?: string;
   skipped?: boolean;
+  strategy?: string;
   txs?: { sig: string; type: string; time: string }[];
 }) {
   const admin = getSupabase();
@@ -83,8 +84,16 @@ export async function saveAgentCycle(result: {
     }
   }
 
-  // Max 50 entries (for proof page)
-  const feed = [...newEntries, ...prevFeed].slice(0, 50);
+  if (result.thought) {
+    newEntries.push({
+      time: timeStr,
+      action: "Thought",
+      detail: result.thought,
+      strategy: result.strategy,
+    });
+  }
+
+  const feed = [...newEntries, ...prevFeed].slice(0, 200);
 
   const updates = {
     total_claimed: (prev.total_claimed ?? 0) + (result.claimed ?? 0),

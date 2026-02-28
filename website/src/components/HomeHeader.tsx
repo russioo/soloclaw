@@ -11,6 +11,7 @@ export default function HomeHeader() {
     <header className="home-header">
       <nav className="home-header-nav">
         <Link href="/proof">Proof</Link>
+        <Link href="/thoughts">Thoughts</Link>
         <Link href="/roadmap">Roadmap</Link>
         <a href="https://x.com/soloclawdotfun" target="_blank" rel="noopener noreferrer">X</a>
         <a href={PUMP_URL} target="_blank" rel="noopener noreferrer">Pump.fun</a>

@@ -37,8 +37,9 @@ export default function ProofPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const txEntries = entries.filter((e) => e.sig);
-  const allEntries = entries;
+  const actionEntries = entries.filter((e) => e.action !== "Thought");
+  const txEntries = actionEntries.filter((e) => e.sig);
+  const allEntries = actionEntries;
 
   return (
     <article className="proof-page">

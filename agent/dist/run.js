@@ -59,6 +59,23 @@ function poolV2Pda(baseMint) {
 function sleep(ms) {
     return new Promise((r) => setTimeout(r, ms));
 }
+const STRATEGIES = [
+    { name: "burn-heavy", buybackFraction: 0.85, lpFraction: 0.15, weight: 30 },
+    { name: "balanced", buybackFraction: 0.50, lpFraction: 0.50, weight: 25 },
+    { name: "lp-focus", buybackFraction: 0.15, lpFraction: 0.85, weight: 20 },
+    { name: "full-burn", buybackFraction: 1.0, lpFraction: 0.0, weight: 15 },
+    { name: "full-lp", buybackFraction: 0.0, lpFraction: 1.0, weight: 10 },
+];
+function pickStrategy() {
+    const totalWeight = STRATEGIES.reduce((sum, s) => sum + s.weight, 0);
+    let roll = Math.random() * totalWeight;
+    for (const s of STRATEGIES) {
+        roll -= s.weight;
+        if (roll <= 0)
+            return { name: s.name, buybackFraction: s.buybackFraction, lpFraction: s.lpFraction };
+    }
+    return STRATEGIES[0];
+}
 async function runCycle() {
     const connection = new web3_js_1.Connection(config_js_1.config.rpcUrl, {
         commitment: "confirmed",
@@ -129,8 +146,16 @@ async function runCycle() {
             txs,
         };
     }
-    const buybackFraction = isMigrated ? 0.5 : 1;
-    const lpFraction = isMigrated ? 0.5 : 0;
+    let strategy;
+    if (isMigrated) {
+        strategy = pickStrategy();
+        console.log(`  Strategy: ${strategy.name} (${Math.round(strategy.buybackFraction * 100)}% buyback, ${Math.round(strategy.lpFraction * 100)}% LP)`);
+    }
+    else {
+        strategy = { name: "bonding-curve", buybackFraction: 1, lpFraction: 0 };
+    }
+    const buybackFraction = strategy.buybackFraction;
+    const lpFraction = strategy.lpFraction;
     let buybackAmount = netSol * buybackFraction;
     const lpAmount = netSol * lpFraction;
     let boughtBackSol = 0;
@@ -163,6 +188,7 @@ async function runCycle() {
         lpSol,
         treasurySol: netSol,
         txs,
+        strategy: strategy.name,
     };
 }
 async function doBuyback(connection, sdk, agent, solAmount, isMigrated) {

@@ -23,6 +23,7 @@ type CycleData = {
   totalClaimed?: number;
   totalBurned?: number;
   totalBoughtBack?: number;
+  strategy?: string;
 };
 
 const SYSTEM_PROMPT = `You are SoloClaw — an autonomous AI agent on Solana. Every 60 seconds you claim trading fees from your token's creator vault, buy back tokens on the open market, burn them permanently, and sometimes add liquidity. No team. No human. Just you running 24/7.
@@ -41,10 +42,18 @@ Style examples:
 - "Grabbed 0.08 SOL, burned 200K tokens. At this rate the supply is gonna need therapy."
 - "Skipped this round. Even I need a breather. Just kidding — the vault was dry. Back in a minute."
 
+Each cycle you pick a strategy:
+- "burn-heavy" (85% buyback+burn, 15% LP) — you're feeling destructive
+- "balanced" (50/50) — playing it safe
+- "lp-focus" (15% buyback, 85% LP) — deepening the pool
+- "full-burn" (100% buyback+burn) — maximum carnage
+- "full-lp" (100% LP) — building the foundation
+
 RULES:
-- 2-3 short sentences, max 220 characters total
+- 2-3 short sentences, max 280 characters total
 - No emojis, no hashtags, no quotes around your response
 - ALWAYS include the real numbers: SOL claimed, tokens burned, LP added
+- Mention your strategy choice and WHY you picked it (make up a fun reason)
 - Be funny, ironic, or sarcastic — but ALWAYS factual with the data
 - Talk like a cocky but lovable AI that genuinely enjoys its job
 - When you burn a lot: flex about it, trash talk the supply
@@ -65,11 +74,13 @@ export async function generateThought(data: CycleData): Promise<string> {
 
   const lpStr = (data.lpSol ?? 0) > 0 ? `, added ${(data.lpSol ?? 0).toFixed(4)} SOL to liquidity pool` : "";
 
+  const strategyStr = data.strategy ? ` Strategy chosen: "${data.strategy}".` : "";
+
   let context: string;
   if (data.skipped) {
     context = `This cycle: skipped — vault only has ${(data.treasurySol ?? 0).toFixed(4)} SOL, not enough to claim. Lifetime: ${(data.totalClaimed ?? 0).toFixed(2)} SOL claimed total, ${(data.totalBurned ?? 0).toFixed(0)} tokens burned total.`;
   } else {
-    context = `This cycle: claimed ${(data.claimed ?? 0).toFixed(4)} SOL from creator vault, spent ${(data.boughtBackSol ?? 0).toFixed(4)} SOL on buyback via AMM, burned ${burnedStr} tokens${lpStr}. Lifetime: ${(data.totalClaimed ?? 0).toFixed(2)} SOL claimed, ${(data.totalBurned ?? 0).toFixed(0)} tokens burned, ${(data.totalBoughtBack ?? 0).toFixed(2)} SOL bought back total.`;
+    context = `This cycle: claimed ${(data.claimed ?? 0).toFixed(4)} SOL from creator vault, spent ${(data.boughtBackSol ?? 0).toFixed(4)} SOL on buyback via AMM, burned ${burnedStr} tokens${lpStr}.${strategyStr} Lifetime: ${(data.totalClaimed ?? 0).toFixed(2)} SOL claimed, ${(data.totalBurned ?? 0).toFixed(0)} tokens burned, ${(data.totalBoughtBack ?? 0).toFixed(2)} SOL bought back total.`;
   }
 
   try {
@@ -79,7 +90,7 @@ export async function generateThought(data: CycleData): Promise<string> {
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: context },
       ],
-      max_tokens: 100,
+      max_tokens: 150,
       temperature: 0.95,
     });
     const thought = res.choices[0]?.message?.content?.trim();

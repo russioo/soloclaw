@@ -17,6 +17,8 @@ async function tick() {
       const isSkipped = "skipped" in result && result.skipped;
       const stats = await getStats();
 
+      const strategy = "strategy" in result ? result.strategy : undefined;
+
       const thought = await generateThought({
         claimed: "claimed" in result ? result.claimed : undefined,
         boughtBackSol: "boughtBackSol" in result ? result.boughtBackSol : undefined,
@@ -27,6 +29,7 @@ async function tick() {
         totalClaimed: stats?.total_claimed ?? 0,
         totalBurned: stats?.total_burned ?? 0,
         totalBoughtBack: stats?.total_bought_back ?? 0,
+        strategy,
       });
 
       console.log(`[thought] "${thought}"`);
@@ -40,6 +43,7 @@ async function tick() {
         treasurySol: result.treasurySol,
         skipped: isSkipped,
         thought,
+        strategy,
         txs: "txs" in result ? result.txs : undefined,
       });
     }

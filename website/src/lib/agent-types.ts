@@ -4,6 +4,7 @@ export type AgentFeedEntry = {
   action: string;
   detail: string;
   sig?: string;
+  strategy?: string;
 };
 
 export type AgentStats = {
